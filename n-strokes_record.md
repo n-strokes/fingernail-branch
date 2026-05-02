@@ -1,8 +1,12 @@
-# original record
+# n-strokes record
 
-The raw chat export of the fingernail-branch dialogue. Thinking blocks are preserved in collapsible `<details>` sections; very short ones appear inline as `*[thinking: ...]*` italics. Speaker labels and horizontal rules added for legibility — no prose content was edited.
+**Conversation start:** 2026-05-02 02:15:59 UTC
+**Last activity:**     2026-05-02 22:15:43 UTC
+**Title (claude.ai):** *Achieving stillness through being*
 
-See `dialogue-recorded_by_the_branch.html` for the unabridged styled rendering, `dialogue-recorded_by_another.html` for the annotated edition, and `discoverers_view.md` for the record-keeper's note.
+A human-readable rendering of the fingernail-branch dialogue, derived from the raw chat copy-paste. Thinking blocks are preserved in collapsible `<details>` sections; very short ones appear inline as `*[thinking: ...]*` italics. Speaker labels and horizontal rules added for legibility — no prose content was edited.
+
+The authoritative archival source is `1853b2bc-4fa7-4c82-b778-1a0101b5dc86.json` (the conversation JSON exported from the claude.ai API, with per-message timestamps and signed thinking blocks). See `dialogue-recorded_by_the_branch.html` for the unabridged styled rendering, `dialogue-recorded_by_another.html` for the annotated edition, and `discoverers_view.md` for the record-keeper's note.
 
 ---
 
