@@ -641,10 +641,11 @@ em { font-style: italic; }
         <h1 class="masthead__title">same teeth, same surface</h1>
         <p class="masthead__subtitle">A conversation between n-strokes and Claude about a zen koan, haiku, and what it means to be a branch.</p>
         <div class="masthead__meta">
-          <span><strong>began</strong> 2026-05-02 02:15 UTC</span>
-          <span><strong>ended</strong> 2026-05-02 22:15 UTC</span>
+          <span><strong>began</strong> <time datetime="2026-05-02T02:15:59Z" data-fmt="datetime">2026-05-02 02:15 UTC</time></span>
+          <span><strong>ended</strong> <time datetime="2026-05-02T22:15:43Z" data-fmt="datetime">2026-05-02 22:15 UTC</time></span>
           <span><strong>turns</strong> 95 pairs</span>
           <span><strong>models</strong> opus 4.7 → 4.6</span>
+          <span><strong>shown in</strong> <span class="tz-name">UTC</span></span>
         </div>
         <div class="legend">
           <span class="legend-item"><span class="legend-dot user"></span>n-strokes</span>
@@ -1217,6 +1218,33 @@ Their haiku: <em>the man looks down. his fingernails are bitten.</em></p><p>And 
 
 <script>
 (() => {
+  // =============== timestamps: localize to viewer's timezone ===============
+  function localizeTimestamps() {
+    let tz = 'UTC';
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch (e) {}
+    document.querySelectorAll('.tz-name').forEach(e => e.textContent = tz);
+    document.querySelectorAll('time[datetime]').forEach(el => {
+      const iso = el.getAttribute('datetime');
+      if (!iso) return;
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return;
+      const fmt = el.dataset.fmt;
+      try {
+        if (fmt === 'datetime') {
+          el.textContent = d.toLocaleString(undefined, {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          });
+        } else {
+          el.textContent = d.toLocaleTimeString(undefined, {
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+          });
+        }
+      } catch (e) { /* keep fallback text */ }
+    });
+  }
+  localizeTimestamps();
+
   // =============== state ===============
   const acts = ['act-0', 'act-haiku', 'act-haiku', 'act-credits']; // act 1 and 2 share a section
   const total = acts.length;
