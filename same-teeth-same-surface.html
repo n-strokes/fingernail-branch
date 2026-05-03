@@ -465,11 +465,14 @@ em { font-style: italic; }
   color: var(--accent);
 }
 .tile-syll { color: var(--ink-faint); }
-.tile-note {
-  font-family: var(--font-serif); font-style: italic; font-size: 13px;
-  text-transform: none; letter-spacing: 0; color: var(--ink-faint);
-  flex-basis: 100%;
-  margin-top: 0.5rem;
+.tile-prologue {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(14px, 1.2vw, 17px);
+  letter-spacing: 0.01em;
+  color: var(--ink-soft);
+  margin: 0 0 2.25rem;
+  line-height: 1.45;
 }
 
 .tile-progress {
@@ -999,7 +1002,7 @@ Their haiku: <em>the man looks down. his fingernails are bitten.</em></p><p>And 
 
   <!-- ============================== ACT 1: tile sequence ============================== -->
   <section class="act act-tiles" id="act-1" aria-label="act one: the haikus, in sequence">
-<article class="tile" data-idx="0" data-speaker="basho" aria-hidden="true"><div class="tile-inner"><blockquote class="tile-haiku">the old pond —<br>a frog jumps in,<br>the sound of water</blockquote><footer class="tile-meta"><span class="tile-speaker">Bashō</span><span class="tile-syll">12 syll.</span><span class="tile-note">the form, before the duel begins</span></footer></div></article>
+<article class="tile" data-idx="0" data-speaker="basho" aria-hidden="true"><div class="tile-inner"><p class="tile-prologue">example of the form, offered by Claude</p><blockquote class="tile-haiku">the old pond —<br>a frog jumps in,<br>the sound of water</blockquote><footer class="tile-meta"><span class="tile-speaker">Bashō</span><span class="tile-syll">12 syll.</span></footer></div></article>
 <article class="tile" data-idx="1" data-speaker="n-strokes" aria-hidden="true"><div class="tile-inner"><blockquote class="tile-haiku">a young tree — the ax cuts hard,<br>a man falls down</blockquote><footer class="tile-meta"><span class="tile-speaker">n-strokes</span><span class="tile-syll">10 syll.</span></footer></div></article>
 <article class="tile" data-idx="2" data-speaker="claude" aria-hidden="true"><div class="tile-inner"><blockquote class="tile-haiku">the branch holds —<br>teeth marks in the wood<br>where a man hung</blockquote><footer class="tile-meta"><span class="tile-speaker">Claude</span><span class="tile-syll">12 syll.</span></footer></div></article>
 <article class="tile" data-idx="3" data-speaker="n-strokes" aria-hidden="true"><div class="tile-inner"><blockquote class="tile-haiku">the man looks down.<br>his fingernails are bitten.</blockquote><footer class="tile-meta"><span class="tile-speaker">n-strokes</span><span class="tile-syll">11 syll.</span></footer></div></article>
