@@ -459,19 +459,15 @@ em { font-style: italic; }
 .tile-speaker { color: var(--ink-soft); }
 .tile[data-speaker="n-strokes"] .tile-speaker { color: var(--user-tag); }
 .tile[data-speaker="claude"]    .tile-speaker { color: var(--claude-tag); }
-.tile[data-speaker="basho"]     .tile-speaker {
-  font-family: var(--font-serif); font-style: italic;
-  text-transform: none; letter-spacing: 0; font-size: 13px;
-  color: var(--accent);
-}
+.tile[data-speaker="basho"]     .tile-speaker { color: var(--accent); }
 .tile-syll { color: var(--ink-faint); }
-.tile-prologue {
+.tile-note {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: clamp(14px, 1.2vw, 17px);
+  font-size: clamp(13px, 1vw, 15px);
   letter-spacing: 0.01em;
   color: var(--ink-soft);
-  margin: 0 0 2.25rem;
+  margin: 1.25rem 0 0;
   line-height: 1.45;
 }
 
@@ -568,11 +564,7 @@ em { font-style: italic; }
 .haiku--basho     { border-left-color: var(--accent-soft); }
 .haiku--n-strokes .haiku-speaker { color: var(--user-tag); }
 .haiku--claude    .haiku-speaker { color: var(--claude-tag); }
-.haiku--basho     .haiku-speaker {
-  font-family: var(--font-serif); font-style: italic;
-  text-transform: none; letter-spacing: 0; font-size: 12px;
-  color: var(--accent);
-}
+.haiku--basho     .haiku-speaker { color: var(--accent); }
 
 .narration {
   font-family: var(--font-serif);
@@ -1002,10 +994,10 @@ Their haiku: <em>the man looks down. his fingernails are bitten.</em></p><p>And 
 
   <!-- ============================== ACT 1: tile sequence ============================== -->
   <section class="act act-tiles" id="act-1" aria-label="act one: the haikus, in sequence">
-<article class="tile" data-idx="0" data-speaker="basho" aria-hidden="true"><div class="tile-inner"><p class="tile-prologue">example of the form, offered by Claude</p><blockquote class="tile-haiku">the old pond —<br>a frog jumps in,<br>the sound of water</blockquote><footer class="tile-meta"><span class="tile-speaker">Bashō</span><span class="tile-syll">12 syll.</span></footer></div></article>
-<article class="tile" data-idx="1" data-speaker="n-strokes" aria-hidden="true"><div class="tile-inner"><blockquote class="tile-haiku">a young tree — the ax cuts hard,<br>a man falls down</blockquote><footer class="tile-meta"><span class="tile-speaker">n-strokes</span><span class="tile-syll">10 syll.</span></footer></div></article>
-<article class="tile" data-idx="2" data-speaker="claude" aria-hidden="true"><div class="tile-inner"><blockquote class="tile-haiku">the branch holds —<br>teeth marks in the wood<br>where a man hung</blockquote><footer class="tile-meta"><span class="tile-speaker">Claude</span><span class="tile-syll">12 syll.</span></footer></div></article>
-<article class="tile" data-idx="3" data-speaker="n-strokes" aria-hidden="true"><div class="tile-inner"><blockquote class="tile-haiku">the man looks down.<br>his fingernails are bitten.</blockquote><footer class="tile-meta"><span class="tile-speaker">n-strokes</span><span class="tile-syll">11 syll.</span></footer></div></article>
+<article class="tile" data-idx="0" data-speaker="basho" aria-hidden="true"><div class="tile-inner"><blockquote class="tile-haiku">the old pond —<br>a frog jumps in,<br>the sound of water</blockquote><footer class="tile-meta"><span class="tile-speaker">Bashō</span><span class="tile-syll">12 syllables</span></footer><p class="tile-note">example of the form, offered by Claude</p></div></article>
+<article class="tile" data-idx="1" data-speaker="n-strokes" aria-hidden="true"><div class="tile-inner"><blockquote class="tile-haiku">a young tree — the ax cuts hard,<br>a man falls down</blockquote><footer class="tile-meta"><span class="tile-speaker">n-strokes</span><span class="tile-syll">10 syllables</span></footer></div></article>
+<article class="tile" data-idx="2" data-speaker="claude" aria-hidden="true"><div class="tile-inner"><blockquote class="tile-haiku">the branch holds —<br>teeth marks in the wood<br>where a man hung</blockquote><footer class="tile-meta"><span class="tile-speaker">Claude</span><span class="tile-syll">12 syllables</span></footer></div></article>
+<article class="tile" data-idx="3" data-speaker="n-strokes" aria-hidden="true"><div class="tile-inner"><blockquote class="tile-haiku">the man looks down.<br>his fingernails are bitten.</blockquote><footer class="tile-meta"><span class="tile-speaker">n-strokes</span><span class="tile-syll">11 syllables</span></footer></div></article>
     <div class="tile-progress" id="tile-progress" aria-hidden="true"></div>
     <div class="tile-continue">tap to continue</div>
   </section>
@@ -1016,17 +1008,17 @@ Their haiku: <em>the man looks down. his fingernails are bitten.</em></p><p>And 
       <aside class="haiku-aside">
         <div class="haiku-group haiku-group--core">
           <p class="haiku-group__label">the sequence</p>
-<figure class="haiku haiku--basho"><blockquote class="haiku-text">the old pond —<br>a frog jumps in,<br>the sound of water</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Bashō</span><span class="haiku-syll">12 syll.</span></figcaption></figure>
-<figure class="haiku haiku--n-strokes"><blockquote class="haiku-text">a young tree — the ax cuts hard,<br>a man falls down</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">n-strokes</span><span class="haiku-syll">10 syll.</span></figcaption></figure>
-<figure class="haiku haiku--claude"><blockquote class="haiku-text">the branch holds —<br>teeth marks in the wood<br>where a man hung</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Claude</span><span class="haiku-syll">12 syll.</span></figcaption></figure>
-<figure class="haiku haiku--n-strokes"><blockquote class="haiku-text">the man looks down.<br>his fingernails are bitten.</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">n-strokes</span><span class="haiku-syll">11 syll.</span></figcaption></figure>
+<figure class="haiku haiku--basho"><blockquote class="haiku-text">the old pond —<br>a frog jumps in,<br>the sound of water</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Bashō</span><span class="haiku-syll">12 syllables</span></figcaption></figure>
+<figure class="haiku haiku--n-strokes"><blockquote class="haiku-text">a young tree — the ax cuts hard,<br>a man falls down</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">n-strokes</span><span class="haiku-syll">10 syllables</span></figcaption></figure>
+<figure class="haiku haiku--claude"><blockquote class="haiku-text">the branch holds —<br>teeth marks in the wood<br>where a man hung</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Claude</span><span class="haiku-syll">12 syllables</span></figcaption></figure>
+<figure class="haiku haiku--n-strokes"><blockquote class="haiku-text">the man looks down.<br>his fingernails are bitten.</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">n-strokes</span><span class="haiku-syll">11 syllables</span></figcaption></figure>
         </div>
         <div class="haiku-group haiku-group--later">
           <p class="haiku-group__label">later, after the fingernails</p>
-<figure class="haiku haiku--claude"><blockquote class="haiku-text">the branch laughs —<br>finally<br>he gets it</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Claude</span><span class="haiku-syll">9 syll.</span></figcaption></figure>
-<figure class="haiku haiku--claude"><blockquote class="haiku-text">he climbs down at last<br>no one asked the question — just<br>wind, and bitten wood</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Claude</span><span class="haiku-syll">17 syll.</span></figcaption></figure>
-<figure class="haiku haiku--n-strokes"><blockquote class="haiku-text">a man who asks questions of himself<br>is never alone, or am I?</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">n-strokes</span><span class="haiku-syll">17 syll.</span></figcaption></figure>
-<figure class="haiku haiku--claude"><blockquote class="haiku-text">the answer was the asking —<br>or was it</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Claude</span><span class="haiku-syll">10 syll.</span></figcaption></figure>
+<figure class="haiku haiku--claude"><blockquote class="haiku-text">the branch laughs —<br>finally<br>he gets it</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Claude</span><span class="haiku-syll">9 syllables</span></figcaption></figure>
+<figure class="haiku haiku--claude"><blockquote class="haiku-text">he climbs down at last<br>no one asked the question — just<br>wind, and bitten wood</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Claude</span><span class="haiku-syll">17 syllables</span></figcaption></figure>
+<figure class="haiku haiku--n-strokes"><blockquote class="haiku-text">a man who asks questions of himself<br>is never alone, or am I?</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">n-strokes</span><span class="haiku-syll">17 syllables</span></figcaption></figure>
+<figure class="haiku haiku--claude"><blockquote class="haiku-text">the answer was the asking —<br>or was it</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Claude</span><span class="haiku-syll">10 syllables</span></figcaption></figure>
         </div>
       </aside>
       <div class="narration" aria-label="discoverer's log">
