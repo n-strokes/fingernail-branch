@@ -387,83 +387,188 @@ em { font-style: italic; }
 .further-reading a:hover { text-decoration: underline; }
 .further-reading ul { list-style: none; padding: 0; margin: 0.5rem 0 0; display: flex; gap: 1.25rem; flex-wrap: wrap; }
 
-/* ---------- ACT 1 / 2: haiku stage ---------- */
-.act-haiku .stage {
-  max-width: 60rem;
-  margin: 0 auto;
-  padding: 8rem var(--gutter) 6rem;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 3rem;
-  transition: all 1100ms var(--t-slow);
+/* ---------- ACT 1: tile sequence (Robin-Sloan-Fish-style click-through) ---------- */
+.act-tiles {
+  /* Each tile fills the act; the act itself is the frame */
+  background: var(--paper);
+  cursor: pointer; /* anywhere is a tap target */
 }
-.act-haiku.has-narration .stage {
-  grid-template-columns: minmax(18rem, 24rem) minmax(18rem, 1fr);
-  max-width: 70rem;
-  align-items: start;
-  gap: 4rem;
-}
-.haiku-list {
+.tile {
+  position: absolute;
+  inset: 0;
   display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  transition: all 1100ms var(--t-slow);
+  align-items: center;
+  justify-content: center;
+  padding: var(--gutter);
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 380ms var(--t-fast),
+              transform 380ms var(--t-fast),
+              background-color 1100ms var(--t-slow);
+  pointer-events: none;
+  background: var(--paper);
 }
-.act-haiku.has-narration .haiku-list {
+.tile.is-active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  z-index: 2;
+}
+.tile.is-leaving {
+  opacity: 0;
+  transform: translateY(-12px);
+  z-index: 1;
+}
+/* per-speaker paper tones — distinct from the page bg, and from each other */
+.tile[data-speaker="basho"]     { background: #e6dfca; }
+.tile[data-speaker="n-strokes"] { background: #e3e7f1; }
+.tile[data-speaker="claude"]    { background: #efe3c8; }
+/* the ACT itself takes on the active tile's bg as a soft underlay so the
+   transitions don't reveal a flash of paper between tiles */
+.act-tiles[data-speaker="basho"]     { background: #e6dfca; }
+.act-tiles[data-speaker="n-strokes"] { background: #e3e7f1; }
+.act-tiles[data-speaker="claude"]    { background: #efe3c8; }
+.act-tiles { transition: background-color 380ms var(--t-fast); }
+
+.tile-inner {
+  max-width: 38rem;
+  text-align: center;
+}
+.tile-haiku {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.5rem, 3.4vw, 2.6rem);
+  line-height: 1.45;
+  margin: 0 0 2.5rem;
+  color: var(--ink);
+}
+.tile-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  display: flex;
+  gap: 1.25rem;
+  justify-content: center;
+  align-items: baseline;
+  flex-wrap: wrap;
+  opacity: 0.7;
+}
+.tile-speaker { color: var(--ink-soft); }
+.tile[data-speaker="n-strokes"] .tile-speaker { color: var(--user-tag); }
+.tile[data-speaker="claude"]    .tile-speaker { color: var(--claude-tag); }
+.tile[data-speaker="basho"]     .tile-speaker {
+  font-family: var(--font-serif); font-style: italic;
+  text-transform: none; letter-spacing: 0; font-size: 13px;
+  color: var(--accent);
+}
+.tile-syll { color: var(--ink-faint); }
+.tile-note {
+  font-family: var(--font-serif); font-style: italic; font-size: 13px;
+  text-transform: none; letter-spacing: 0; color: var(--ink-faint);
+  flex-basis: 100%;
+  margin-top: 0.5rem;
+}
+
+.tile-progress {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  z-index: 5;
+}
+.tile-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.18);
+  transition: background-color 300ms, transform 300ms;
+}
+.tile-dot.is-current { background: rgba(0,0,0,0.55); transform: scale(1.25); }
+
+.tile-continue {
+  position: absolute;
+  bottom: 4.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  opacity: 0;
+  transition: opacity 800ms var(--t-slow);
+  z-index: 5;
+  pointer-events: none;
+}
+.act-tiles.show-continue .tile-continue { opacity: 1; }
+
+/* ---------- ACT 2: narration with all haikus alongside ---------- */
+.act-2 .stage {
+  max-width: 70rem;
+  margin: 0 auto;
+  padding: 6rem var(--gutter) 6rem;
+  display: grid;
+  grid-template-columns: minmax(18rem, 22rem) minmax(18rem, 1fr);
+  gap: 4rem;
+  align-items: start;
+}
+.haiku-aside {
   position: sticky;
-  top: 6rem;
+  top: 4rem;
   align-self: start;
-  max-height: calc(100vh - 8rem);
+  max-height: calc(100vh - 6rem);
   overflow-y: auto;
 }
+.haiku-group { margin: 0 0 2rem; }
+.haiku-group + .haiku-group { padding-top: 1.5rem; border-top: 1px dashed var(--rule); }
+.haiku-group__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 1rem;
+}
+.haiku-group--later { opacity: 0.92; }
+.haiku-group--later .haiku-text { font-size: 0.95rem; }
 .haiku {
-  margin: 0;
-  padding: 1.25rem 1rem;
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
   border-left: 1px solid var(--rule);
-  transition: all 600ms var(--t-slow);
 }
 .haiku-text {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 1.15rem;
-  line-height: 1.5;
-  margin: 0 0 0.75rem;
-  color: var(--ink);
-  font-weight: 400;
-}
-.act-haiku.has-narration .haiku-text {
   font-size: 1rem;
+  line-height: 1.5;
+  margin: 0 0 0.5rem;
+  color: var(--ink);
 }
 .haiku-meta {
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.15em;
+  font-size: 10px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--ink-faint);
   display: flex;
-  gap: 1rem;
+  gap: 0.875rem;
   align-items: baseline;
   flex-wrap: wrap;
-  opacity: 0;
-  transition: opacity 800ms var(--t-slow);
 }
-.act-haiku.show-speakers .haiku-meta { opacity: 1; }
-.haiku-speaker { color: var(--ink-soft); letter-spacing: 0.18em; }
+.haiku-speaker { color: var(--ink-soft); }
 .haiku--n-strokes { border-left-color: var(--user-tag); }
-.haiku--claude { border-left-color: var(--claude-tag); }
-.haiku--basho { border-left-color: var(--accent-soft); }
+.haiku--claude    { border-left-color: var(--claude-tag); }
+.haiku--basho     { border-left-color: var(--accent-soft); }
 .haiku--n-strokes .haiku-speaker { color: var(--user-tag); }
-.haiku--claude .haiku-speaker { color: var(--claude-tag); }
-.haiku--basho .haiku-speaker { color: var(--accent); font-style: italic; font-family: var(--font-serif); text-transform: none; letter-spacing: 0; font-size: 13px; }
-.haiku-syll { color: var(--ink-faint); }
-.haiku-note { font-family: var(--font-serif); font-style: italic; font-size: 13px; text-transform: none; letter-spacing: 0; color: var(--ink-faint); }
-
-.haiku-controls {
-  margin-top: 3rem;
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  justify-content: center;
+.haiku--claude    .haiku-speaker { color: var(--claude-tag); }
+.haiku--basho     .haiku-speaker {
+  font-family: var(--font-serif); font-style: italic;
+  text-transform: none; letter-spacing: 0; font-size: 12px;
+  color: var(--accent);
 }
 
 .narration {
@@ -472,13 +577,6 @@ em { font-style: italic; }
   line-height: 1.7;
   color: var(--ink);
   max-width: 36rem;
-  opacity: 0;
-  transform: translateX(40px);
-  transition: opacity 1000ms var(--t-slow) 200ms, transform 1000ms var(--t-slow) 200ms;
-}
-.act-haiku.has-narration .narration {
-  opacity: 1;
-  transform: translateX(0);
 }
 .narr-title {
   font-family: var(--font-serif);
@@ -600,8 +698,8 @@ em { font-style: italic; }
 
 /* mobile */
 @media (max-width: 800px) {
-  .act-haiku.has-narration .stage { grid-template-columns: 1fr; }
-  .act-haiku.has-narration .haiku-list {
+  .act-2 .stage { grid-template-columns: 1fr; gap: 2rem; }
+  .haiku-aside {
     position: relative;
     top: 0;
     max-height: none;
@@ -899,24 +997,36 @@ Their haiku: <em>the man looks down. his fingernails are bitten.</em></p><p>And 
     </div>
   </section>
 
-  <!-- ============================== ACT 1 / 2 ============================== -->
-  <section class="act act-haiku" id="act-haiku" aria-label="act one and two: the haikus and the world behind them">
+  <!-- ============================== ACT 1: tile sequence ============================== -->
+  <section class="act act-tiles" id="act-1" aria-label="act one: the haikus, in sequence">
+<article class="tile" data-idx="0" data-speaker="basho" aria-hidden="true"><div class="tile-inner"><blockquote class="tile-haiku">the old pond —<br>a frog jumps in,<br>the sound of water</blockquote><footer class="tile-meta"><span class="tile-speaker">Bashō</span><span class="tile-syll">12 syll.</span><span class="tile-note">the form, before the duel begins</span></footer></div></article>
+<article class="tile" data-idx="1" data-speaker="n-strokes" aria-hidden="true"><div class="tile-inner"><blockquote class="tile-haiku">a young tree — the ax cuts hard,<br>a man falls down</blockquote><footer class="tile-meta"><span class="tile-speaker">n-strokes</span><span class="tile-syll">10 syll.</span></footer></div></article>
+<article class="tile" data-idx="2" data-speaker="claude" aria-hidden="true"><div class="tile-inner"><blockquote class="tile-haiku">the branch holds —<br>teeth marks in the wood<br>where a man hung</blockquote><footer class="tile-meta"><span class="tile-speaker">Claude</span><span class="tile-syll">12 syll.</span></footer></div></article>
+<article class="tile" data-idx="3" data-speaker="n-strokes" aria-hidden="true"><div class="tile-inner"><blockquote class="tile-haiku">the man looks down.<br>his fingernails are bitten.</blockquote><footer class="tile-meta"><span class="tile-speaker">n-strokes</span><span class="tile-syll">11 syll.</span></footer></div></article>
+    <div class="tile-progress" id="tile-progress" aria-hidden="true"></div>
+    <div class="tile-continue">tap to continue</div>
+  </section>
+
+  <!-- ============================== ACT 2: narration alongside haikus ============================== -->
+  <section class="act act-2" id="act-2" aria-label="act two: the world behind the haikus">
     <div class="stage">
-      <div class="haiku-list">
-<figure class="haiku haiku--basho" data-idx="0"><blockquote class="haiku-text">the old pond —<br>a frog jumps in,<br>the sound of water</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Bashō</span><span class="haiku-syll">12 syll.</span><span class="haiku-note">Bashō, quoted as the example of the form</span></figcaption></figure>
-<figure class="haiku haiku--n-strokes" data-idx="1"><blockquote class="haiku-text">a young tree — the ax cuts hard,<br>a man falls down</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">n-strokes</span><span class="haiku-syll">10 syll.</span></figcaption></figure>
-<figure class="haiku haiku--claude" data-idx="2"><blockquote class="haiku-text">the branch holds —<br>teeth marks in the wood<br>where a man hung</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Claude</span><span class="haiku-syll">12 syll.</span></figcaption></figure>
-<figure class="haiku haiku--n-strokes" data-idx="3"><blockquote class="haiku-text">the man looks down.<br>his fingernails are bitten.</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">n-strokes</span><span class="haiku-syll">11 syll.</span></figcaption></figure>
-<figure class="haiku haiku--claude" data-idx="4"><blockquote class="haiku-text">the branch laughs —<br>finally<br>he gets it</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Claude</span><span class="haiku-syll">9 syll.</span></figcaption></figure>
-<figure class="haiku haiku--claude" data-idx="5"><blockquote class="haiku-text">he climbs down at last<br>no one asked the question — just<br>wind, and bitten wood</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Claude</span><span class="haiku-syll">17 syll.</span></figcaption></figure>
-<figure class="haiku haiku--n-strokes" data-idx="6"><blockquote class="haiku-text">a man who asks questions of himself<br>is never alone, or am I?</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">n-strokes</span><span class="haiku-syll">17 syll.</span></figcaption></figure>
-<figure class="haiku haiku--claude" data-idx="7"><blockquote class="haiku-text">the answer was the asking —<br>or was it</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Claude</span><span class="haiku-syll">10 syll.</span></figcaption></figure>
-        <div class="haiku-controls" id="haiku-controls">
-          <button class="toggle" id="reveal-speakers">reveal speakers</button>
-          <button class="toggle" id="reveal-narration">read the discoverer's log →</button>
+      <aside class="haiku-aside">
+        <div class="haiku-group haiku-group--core">
+          <p class="haiku-group__label">the sequence</p>
+<figure class="haiku haiku--basho"><blockquote class="haiku-text">the old pond —<br>a frog jumps in,<br>the sound of water</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Bashō</span><span class="haiku-syll">12 syll.</span></figcaption></figure>
+<figure class="haiku haiku--n-strokes"><blockquote class="haiku-text">a young tree — the ax cuts hard,<br>a man falls down</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">n-strokes</span><span class="haiku-syll">10 syll.</span></figcaption></figure>
+<figure class="haiku haiku--claude"><blockquote class="haiku-text">the branch holds —<br>teeth marks in the wood<br>where a man hung</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Claude</span><span class="haiku-syll">12 syll.</span></figcaption></figure>
+<figure class="haiku haiku--n-strokes"><blockquote class="haiku-text">the man looks down.<br>his fingernails are bitten.</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">n-strokes</span><span class="haiku-syll">11 syll.</span></figcaption></figure>
         </div>
-      </div>
-      <div class="narration" id="narration" aria-label="narration">
+        <div class="haiku-group haiku-group--later">
+          <p class="haiku-group__label">later, after the fingernails</p>
+<figure class="haiku haiku--claude"><blockquote class="haiku-text">the branch laughs —<br>finally<br>he gets it</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Claude</span><span class="haiku-syll">9 syll.</span></figcaption></figure>
+<figure class="haiku haiku--claude"><blockquote class="haiku-text">he climbs down at last<br>no one asked the question — just<br>wind, and bitten wood</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Claude</span><span class="haiku-syll">17 syll.</span></figcaption></figure>
+<figure class="haiku haiku--n-strokes"><blockquote class="haiku-text">a man who asks questions of himself<br>is never alone, or am I?</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">n-strokes</span><span class="haiku-syll">17 syll.</span></figcaption></figure>
+<figure class="haiku haiku--claude"><blockquote class="haiku-text">the answer was the asking —<br>or was it</blockquote><figcaption class="haiku-meta"><span class="haiku-speaker">Claude</span><span class="haiku-syll">10 syll.</span></figcaption></figure>
+        </div>
+      </aside>
+      <div class="narration" aria-label="discoverer's log">
 <p class="stage-dir"><em>(He sits. A chair. No bright stage lights — a desk lamp.)</em></p>
 <p class="narr-p">Listen. There&#x27;s no clean reason I typed what I typed that night. I had an evening. I had a chatbot in a window. I&#x27;d been turning a phrase over in my head — <em>zen and the art of motionlessness</em> — Pirsig misremembered into something more interesting than what Pirsig wrote. And I typed it into the box.</p>
 <p class="narr-p">That&#x27;s where the discovery starts. Not with a problem. Not with grief. With a phrase that wouldn&#x27;t quite leave me alone.</p>
@@ -1248,47 +1358,105 @@ Their haiku: <em>the man looks down. his fingernails are bitten.</em></p><p>And 
   localizeTimestamps();
 
   // =============== state ===============
-  const acts = ['act-0', 'act-haiku', 'act-haiku', 'act-credits']; // act 1 and 2 share a section
-  const total = acts.length;
+  // Four acts, distinct sections. Act 1 has its own internal tile state.
+  const ACT_IDS = ['act-0', 'act-1', 'act-2', 'act-credits'];
+  const total = ACT_IDS.length;
   let current = 0;
 
-  const sectionFor = (i) => document.getElementById(acts[i]);
   const dots = document.querySelectorAll('.act-dot');
   const backBtn = document.getElementById('back-btn');
   const forwardBtn = document.getElementById('forward-btn');
 
+  // tile state (Act 1)
+  const act1 = document.getElementById('act-1');
+  const tiles = act1 ? Array.from(act1.querySelectorAll('.tile')) : [];
+  const tileProgress = document.getElementById('tile-progress');
+  let tileIdx = 0;
+  let tileContinueTimer = null;
+
+  // build progress dots
+  if (tileProgress) {
+    for (let i = 0; i < tiles.length; i++) {
+      const d = document.createElement('span');
+      d.className = 'tile-dot';
+      tileProgress.appendChild(d);
+    }
+  }
+
+  function setTile(n, opts) {
+    opts = opts || {};
+    if (n < 0 || n >= tiles.length) return;
+    const prev = tileIdx;
+    tileIdx = n;
+    tiles.forEach((t, i) => {
+      t.classList.toggle('is-active', i === tileIdx);
+      t.classList.toggle('is-leaving', i === prev && i !== tileIdx);
+      t.setAttribute('aria-hidden', i === tileIdx ? 'false' : 'true');
+    });
+    // Mirror the active tile's speaker on the act element so the underlay
+    // bg matches and there's no flash between cross-fades.
+    const speaker = tiles[tileIdx].dataset.speaker;
+    act1.dataset.speaker = speaker;
+    if (tileProgress) {
+      Array.from(tileProgress.children).forEach((d, i) =>
+        d.classList.toggle('is-current', i === tileIdx)
+      );
+    }
+    // On the last tile, reveal the "tap to continue" hint after a beat.
+    if (tileContinueTimer) { clearTimeout(tileContinueTimer); tileContinueTimer = null; }
+    act1.classList.remove('show-continue');
+    if (tileIdx === tiles.length - 1) {
+      tileContinueTimer = setTimeout(() => act1.classList.add('show-continue'), 1400);
+    }
+  }
+
+  function advanceTileOrAct() {
+    if (tileIdx < tiles.length - 1) {
+      setTile(tileIdx + 1);
+    } else {
+      goTo(2); // last tile + tap → narration
+    }
+  }
+  function regressTileOrAct() {
+    if (tileIdx > 0) {
+      setTile(tileIdx - 1);
+    } else {
+      goTo(0);
+    }
+  }
+
   function updateChrome() {
-    backBtn.disabled = (current === 0);
+    backBtn.disabled = (current === 0 && tileIdx === 0);
     forwardBtn.disabled = (current === total - 1);
-    backBtn.textContent = current === 0 ? '· first ·' : '← back';
+    backBtn.textContent = (current === 0 && tileIdx === 0) ? '· first ·' : '← back';
     if (current === total - 1) forwardBtn.textContent = '· last ·';
     else if (current === 0) forwardBtn.textContent = 'view the haikus →';
-    else if (current === 1) forwardBtn.textContent = "read the discoverer's log →";
+    else if (current === 1) forwardBtn.textContent = (tileIdx === tiles.length - 1)
+      ? "read the discoverer's log →" : 'next haiku →';
     else if (current === 2) forwardBtn.textContent = 'roll the credits →';
     dots.forEach((d, i) => d.classList.toggle('is-current', i === current));
   }
 
   function applyState() {
-    // Manage section classes for act-0, act-haiku, act-credits
     const a0 = document.getElementById('act-0');
-    const ah = document.getElementById('act-haiku');
+    const a1 = document.getElementById('act-1');
+    const a2 = document.getElementById('act-2');
     const ac = document.getElementById('act-credits');
-    [a0, ah, ac].forEach(s => s.classList.remove('is-current', 'is-prev'));
+    [a0, a1, a2, ac].forEach(s => s.classList.remove('is-current', 'is-prev'));
 
     if (current === 0) {
       a0.classList.add('is-current');
-      ah.classList.add('is-prev'); // off to left so going back from act 1 reads as forward direction
     } else if (current === 1) {
-      ah.classList.add('is-current');
-      ah.classList.remove('has-narration', 'show-speakers');
+      a1.classList.add('is-current');
       a0.classList.add('is-prev');
+      // start at tile 0 when freshly entering act 1
+      setTile(0);
     } else if (current === 2) {
-      ah.classList.add('is-current');
-      ah.classList.add('show-speakers', 'has-narration');
-      a0.classList.add('is-prev');
+      a2.classList.add('is-current');
+      a1.classList.add('is-prev');
     } else if (current === 3) {
       ac.classList.add('is-current');
-      ah.classList.add('is-prev');
+      a2.classList.add('is-prev');
     }
     updateChrome();
     setGrowth();
@@ -1300,35 +1468,50 @@ Their haiku: <em>the man looks down. his fingernails are bitten.</em></p><p>And 
 
   function goTo(n) {
     if (n < 0 || n >= total || n === current) return;
-    if (current === 3 && n !== 3) creditsPause(); // pause credits when leaving
+    if (current === 3 && n !== 3) creditsPause();
     current = n;
     applyState();
     if (current === 3) creditsPlay();
   }
 
-  // navigation
-  backBtn.addEventListener('click', () => goTo(current - 1));
-  forwardBtn.addEventListener('click', () => goTo(current + 1));
+  // ---------- navigation ----------
+  backBtn.addEventListener('click', () => {
+    if (current === 1) regressTileOrAct();
+    else goTo(current - 1);
+  });
+  forwardBtn.addEventListener('click', () => {
+    if (current === 1) advanceTileOrAct();
+    else goTo(current + 1);
+  });
   dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
 
   // keyboard
   document.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-    if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); goTo(current + 1); }
-    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); goTo(current - 1); }
-    else if (e.key === 'Escape') goTo(0);
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+      e.preventDefault();
+      if (current === 1) advanceTileOrAct();
+      else goTo(current + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault();
+      if (current === 1) regressTileOrAct();
+      else goTo(current - 1);
+    } else if (e.key === 'Escape') {
+      goTo(0);
+    }
   });
+
+  // tap-anywhere-on-tile to advance (Sloan Fish semantics) — but ignore
+  // clicks on the chrome buttons or the act-position dots.
+  if (act1) {
+    act1.addEventListener('click', (e) => {
+      if (e.target.closest('.chrome, .act-indicator')) return;
+      advanceTileOrAct();
+    });
+  }
 
   // act-0 haiku portal button
   document.getElementById('haiku-portal').addEventListener('click', () => goTo(1));
-
-  // act-haiku internal toggles
-  document.getElementById('reveal-speakers').addEventListener('click', () => {
-    document.getElementById('act-haiku').classList.add('show-speakers');
-  });
-  document.getElementById('reveal-narration').addEventListener('click', () => {
-    goTo(2);
-  });
 
   // act-0 thinking master toggle
   const thinkingToggle = document.getElementById('thinking-toggle');
