@@ -438,37 +438,37 @@ em { font-style: italic; }
   font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
-  font-size: clamp(1.5rem, 3.4vw, 2.6rem);
-  line-height: 1.45;
+  font-size: clamp(1.85rem, 3.8vw, 3rem);
+  line-height: 1.4;
   margin: 0 0 2.5rem;
   color: var(--ink);
 }
 .tile-meta {
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.22em;
+  font-size: clamp(14px, 1.2vw, 17px);
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--ink);
   display: flex;
-  gap: 1.25rem;
+  gap: 1.5rem;
   justify-content: center;
   align-items: baseline;
   flex-wrap: wrap;
-  opacity: 0.7;
+  opacity: 1;
 }
-.tile-speaker { color: var(--ink-soft); }
+.tile-speaker { color: var(--ink); }
 .tile[data-speaker="n-strokes"] .tile-speaker { color: var(--user-tag); }
 .tile[data-speaker="claude"]    .tile-speaker { color: var(--claude-tag); }
 .tile[data-speaker="basho"]     .tile-speaker { color: var(--accent); }
-.tile-syll { color: var(--ink-faint); }
+.tile-syll { color: var(--ink-soft); }
 .tile-note {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: clamp(13px, 1vw, 15px);
-  letter-spacing: 0.01em;
-  color: var(--ink-soft);
-  margin: 1.25rem 0 0;
-  line-height: 1.45;
+  font-size: clamp(16px, 1.4vw, 20px);
+  letter-spacing: 0.005em;
+  color: var(--ink);
+  margin: 1.5rem 0 0;
+  line-height: 1.5;
 }
 
 .tile-progress {
@@ -481,12 +481,12 @@ em { font-style: italic; }
   z-index: 5;
 }
 .tile-dot {
-  width: 6px; height: 6px;
+  width: 8px; height: 8px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.18);
+  background: rgba(0,0,0,0.22);
   transition: background-color 300ms, transform 300ms;
 }
-.tile-dot.is-current { background: rgba(0,0,0,0.55); transform: scale(1.25); }
+.tile-dot.is-current { background: rgba(0,0,0,0.6); transform: scale(1.25); }
 
 .tile-continue {
   position: absolute;
@@ -494,10 +494,10 @@ em { font-style: italic; }
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.22em;
+  font-size: 13px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--ink-soft);
   opacity: 0;
   transition: opacity 800ms var(--t-slow);
   z-index: 5;
@@ -526,35 +526,34 @@ em { font-style: italic; }
 .haiku-group + .haiku-group { padding-top: 1.5rem; border-top: 1px dashed var(--rule); }
 .haiku-group__label {
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.22em;
+  font-size: 12px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ink-faint);
-  margin: 0 0 1rem;
-}
-.haiku-group--later { opacity: 0.92; }
-.haiku-group--later .haiku-text { font-size: 0.95rem; }
-.haiku {
+  color: var(--ink-soft);
   margin: 0 0 1.25rem;
-  padding: 0.75rem 1rem;
-  border-left: 1px solid var(--rule);
+}
+.haiku-group--later .haiku-text { font-size: 1.1rem; }
+.haiku {
+  margin: 0 0 1.5rem;
+  padding: 0.875rem 1.125rem;
+  border-left: 2px solid var(--rule);
 }
 .haiku-text {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 1rem;
+  font-size: 1.15rem;
   line-height: 1.5;
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.625rem;
   color: var(--ink);
 }
 .haiku-meta {
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
+  font-size: 12px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--ink-soft);
   display: flex;
-  gap: 0.875rem;
+  gap: 1rem;
   align-items: baseline;
   flex-wrap: wrap;
 }
