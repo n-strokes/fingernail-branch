@@ -1,0 +1,969 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Lightened Claws — a dialogue</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 30 V18 M16 18 L8 10 M16 18 L24 10 M16 18 L16 6' stroke='%23232324' stroke-width='2.5' stroke-linecap='round' fill='none'/></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --paper: #f4ece0;
+  --paper-deep: #e9dfcc;
+  --paper-warm: #efe5cf;
+  --paper-cool: #e3e7f1;
+  --paper-aged: #e6dfca;
+  --ink: #232324;
+  --ink-soft: #5b5b5d;
+  --ink-faint: #8c8c8f;
+  --rule: #d6cfb9;
+  --accent: #6a4a2a;
+  --user-tag: #2b3a55;
+  --claws-tag: #6a4a2a;
+  --placard-bg: #efe5cf;
+  --koan-bg: #2d2a26;
+  --koan-ink: #efe9d9;
+  --font-sans: 'Brandon Grotesque', system-ui, -apple-system, sans-serif;
+  --font-serif: 'EB Garamond', 'Iowan Old Style', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --ease: cubic-bezier(0.6, 0.05, 0.25, 1);
+  --t-scene: 880ms;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; height: 100%; width: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 18px;
+  -webkit-font-smoothing: antialiased;
+  touch-action: none;
+}
+em { font-style: italic; }
+strong { font-weight: 600; }
+
+.atmosphere {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse at 22% 28%, rgba(225, 200, 165, 0.55) 0%, transparent 52%),
+    radial-gradient(ellipse at 78% 72%, rgba(180, 165, 140, 0.4) 0%, transparent 56%),
+    var(--paper);
+  transform: translateZ(0); will-change: transform;
+}
+.atmosphere::after {
+  content: ""; position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.65 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 200px 200px;
+  opacity: 0.16;
+  mix-blend-mode: multiply;
+}
+
+/* ---------- chrome (top-left back/next) ---------- */
+.chrome {
+  position: fixed;
+  top: 1.25rem;
+  left: 1.25rem;
+  z-index: 30;
+  display: flex;
+  gap: 0.5rem;
+}
+.nav-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: rgba(244, 236, 224, 0.85);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--rule);
+  color: var(--ink-soft);
+  padding: 0.5rem 0.875rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.nav-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+.nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+/* progress bar at top */
+.progress {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 2px; z-index: 40;
+  background: rgba(0, 0, 0, 0.06);
+}
+.progress__fill {
+  height: 100%; width: 0%;
+  background: var(--accent);
+  transition: width 600ms var(--ease);
+}
+
+/* track + scenes */
+.track {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 10;
+  transform: translate3d(0, 0, 0);
+  transition: transform var(--t-scene) var(--ease);
+  will-change: transform;
+}
+.scene {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem clamp(1.25rem, 5vw, 4rem);
+}
+.scene-inner {
+  width: 100%;
+  max-width: 42rem;
+}
+.scene { opacity: 0.06; transition: opacity 600ms var(--ease); }
+.scene.is-active { opacity: 1; }
+
+/* ---------- intro: bg image anchored left; text in a fixed right column ---------- */
+.scene--intro {
+  /* Match the image's natural cream so there is no visible color seam
+     where the image ends and the page bg begins. */
+  background-color: #fefefa;
+  background-image: url("images/how-it-is-hanging-textless.jpg");
+  /* Cap the image height so the right side has room for text. */
+  background-size: auto min(86vh, 70vw);
+  background-position: 2% center;
+  background-repeat: no-repeat;
+  position: relative;
+  /* Override .scene 5rem padding so absolute children can reach the true
+     viewport edges (otherwise the enter hint floats well above bottom). */
+  padding: 0;
+}
+.scene--intro .scene-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+}
+.intro-text-column {
+  position: absolute;
+  top: 50%;
+  right: 4%;
+  transform: translateY(-50%);
+  width: 40%;
+  max-width: 34rem;
+  max-height: 82vh;
+  overflow: hidden;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2.75rem;
+}
+.intro-koan-block { margin: 0; }
+.intro-koan {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(1.15rem, 1.45vw, 1.55rem);
+  line-height: 1.5;
+  color: var(--ink);
+  margin: 0 0 1.5rem;
+}
+.intro-koan p { margin: 0 0 0.875rem; }
+.intro-koan p:last-child { margin-bottom: 0; }
+.intro-koan-attr {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0;
+}
+.intro-haiku-block { margin: 0; }
+.intro-haiku {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
+  line-height: 1.3;
+  color: var(--ink);
+  margin: 0 0 0.875rem;
+}
+.intro-haiku-attr {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--user-tag);
+  margin: 0;
+}
+.intro-enter {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  /* The bob keyframes already include translateX(-50%) so the static
+     transform here is redundant, but kept for clarity / fallback. */
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0;
+  animation: bob-centered 2.4s ease-in-out infinite;
+}
+@keyframes bob-centered {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(6px); }
+}
+@media (max-width: 800px) {
+  .scene--intro {
+    background-size: 92% auto;
+    background-position: center 6%;
+  }
+  .intro-text-column {
+    position: absolute;
+    top: auto;
+    right: 4%;
+    bottom: 8%;
+    transform: none;
+    width: 92%;
+    max-width: none;
+  }
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+/* ---------- dialogue turn ---------- */
+.scene--turn .scene-inner {
+  max-width: 42rem;
+}
+.speaker {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 1.75rem;
+}
+.scene--turn.turn--user .speaker  { color: var(--user-tag); }
+.scene--turn.turn--claws .speaker { color: var(--claws-tag); }
+.body {
+  font-family: var(--font-serif);
+  font-size: clamp(1.25rem, 1.6vw, 1.55rem);
+  line-height: 1.55;
+  color: var(--ink);
+}
+.body p { margin: 0 0 1rem; }
+.body p:last-child { margin-bottom: 0; }
+.scene--turn.turn--user .body { font-style: italic; }
+
+/* ---------- placard (haiku) ---------- */
+.scene--placard {
+  background: var(--placard-bg);
+}
+.placard-inner {
+  text-align: center;
+  max-width: 42rem;
+}
+.placard-haiku {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.4;
+  margin: 0 0 2.25rem;
+  color: var(--ink);
+}
+.placard-meta {
+  font-family: var(--font-mono);
+  font-size: clamp(13px, 1.1vw, 15px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0;
+  display: flex;
+  gap: 1.25rem;
+  justify-content: center;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+.placard-speaker { color: var(--ink-soft); }
+.placard--n-strokes .placard-speaker { color: var(--user-tag); }
+.placard--claws .placard-speaker     { color: var(--claws-tag); }
+.placard--basho .placard-speaker     { color: var(--accent); }
+.placard-syll { color: var(--ink-faint); }
+.placard-note {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(13px, 1vw, 15px);
+  letter-spacing: 0.005em;
+  color: var(--ink-soft);
+  margin: 1.25rem 0 0;
+  text-align: center;
+}
+
+/* ---------- koan panel ---------- */
+.scene--koan {
+  background: var(--koan-bg);
+  color: var(--koan-ink);
+}
+.scene--koan::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 40%, rgba(120, 100, 60, 0.3) 0%, transparent 55%),
+    radial-gradient(ellipse at 70% 60%, rgba(60, 80, 90, 0.25) 0%, transparent 60%);
+}
+.scene--koan::after {
+  content: ""; position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.45 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 200px 200px;
+  opacity: 0.06; pointer-events: none;
+}
+.koan-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 44rem;
+  text-align: left;
+}
+.scene--koan .eyebrow {
+  color: rgba(239, 233, 217, 0.5);
+  text-align: center;
+}
+.koan-part {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(1.1rem, 1.5vw, 1.35rem);
+  line-height: 1.55;
+  color: var(--koan-ink);
+  margin: 0 0 1.5rem;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 700ms var(--ease), transform 700ms var(--ease);
+}
+.koan-part.is-shown {
+  opacity: 1;
+  transform: translateY(0);
+}
+.koan-part p { margin: 0 0 1rem; }
+.koan-part p:last-child { margin-bottom: 0; }
+.koan-hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(239, 233, 217, 0.4);
+  text-align: center;
+  margin: 2.5rem 0 0;
+  opacity: 0;
+  transition: opacity 600ms var(--ease) 400ms;
+}
+.scene--koan.is-active .koan-hint { opacity: 1; }
+.scene--koan.is-fully-shown .koan-hint { color: rgba(239, 233, 217, 0.65); }
+</style>
+</head>
+<body>
+
+<div class="atmosphere"></div>
+
+<div class="progress"><div class="progress__fill" id="progress-fill"></div></div>
+
+<nav class="chrome" aria-label="navigation">
+  <button class="nav-btn" id="back-btn" aria-label="previous">← back</button>
+  <button class="nav-btn" id="next-btn" aria-label="next">next →</button>
+</nav>
+
+<div class="track" id="track">
+<section class="scene scene--intro" data-i="0" data-type="intro">
+      <div class="scene-inner intro-inner">
+        <div class="intro-text-column">
+          <div class="intro-koan-block">
+            <div class="intro-koan">
+<p>It is like a man up in a tree, hanging from a branch by his mouth;<br>his hands cannot grasp a branch, his feet won’t reach a bough.</p>
+<p>Another man comes under the tree and asks him,<br>“What is the meaning of Bodhidharma coming from the West?”<br>If he does not answer, he fails the questioner.<br>If he answers, he will fall and die.<br>At such a time, how should he answer?</p>
+            </div>
+            <p class="intro-koan-attr">Mumon · Mumonkan · 1228</p>
+          </div>
+          <div class="intro-haiku-block">
+            <blockquote class="intro-haiku">the man looks down. his fingernails are bitten.</blockquote>
+            <p class="intro-haiku-attr">n-strokes</p>
+          </div>
+        </div>
+        <p class="intro-enter">enter dialogue ↓</p>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="1" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>zen and the art of.... motionlessness? how does one be oneself into stillness. the riddle of the day.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="2" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Zen traditions tend to hold that stillness is not something you achieve but something you stop covering up. <em>Wu wei</em> isn&#x27;t &quot;do nothing,&quot; it&#x27;s more like &quot;drop the unnecessary push.&quot; [@claude: insert an explanation / citation for wu wei. some substance behind this &#x27;the traditions hold&#x27; claim.]</p><p>[after one-click, as a build] In other words: don&#x27;t just do something, sit there.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="3" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>someone once wrote something about zen and hanging by your teeth on a cliff, or at least that&#x27;s how it stuck with me.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="4" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>You&#x27;re remembering Mumon&#x27;s koan from the Mumonkan (the &quot;Gateless Gate&quot;), 13th-century collection. The case is usually called &quot;Kyōgen&#x27;s Man Up a Tree&quot; or just &quot;Up a Tree.&quot;</p><p>[Panel with koan] [@claude - this should be same with illustration as the opening page. same image. same text, but no n-strokes bitten fingernail part. the second click should bring mumon&#x27;s commentary forward as a separate placard now. it can be dark, similar to the panel we used to have for the koan. this is also corresponding to chapter 1. ]</p><p>Master Kyōgen said, “It is like a man up in a tree, hanging from a branch by his mouth; his hands cannot grasp a branch, his feet won&#x27;t reach a bough. Another man comes under the tree and asks him, &#x27;What is the meaning of Bodhidharma coming from the West?&#x27; If he does not answer, he fails the questioner. If he answers, he will fall and die. At such a time, how should he answer?”</p><p>[second part to panel introduced upon one click advance]</p><p>Mumon&#x27;s commentary (1228) [@claude: this is now a second screen, not second part to the panel. it is a dark screen, big text.]</p><p>Even if your eloquence flows like a river, it is of no use. Even if you can expound the whole body of the sutras, it is of no avail. If you can respond to it fittingly, you will give life to those who have been dead, and put to life those who have been alive. If, however, you are unable to do this, wait for Maitreya to come and ask him.</p><p>[end 1-pg panel]</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="5" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>That&#x27;s the whole koan. It&#x27;s the same shape as your earlier riddle, actually - any move loses, including the move of not moving. The trap is total. Which is the point: it&#x27;s built to break the part of you that thinks the answer is a clever maneuver. There isn&#x27;t one.</p><p>Mumon&#x27;s commentary basically says even if you had a tongue like Shariputra (the Buddha&#x27;s most eloquent disciple), it wouldn&#x27;t help here. Eloquence is exactly the wrong currency.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="6" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>it is a little terrifying.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="7" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Maybe because it says that there are situations in a life where no clever maneuver saves you. Death is the obvious one, but smaller versions show up constantly: griefs you can&#x27;t fix, conversations where any word is wrong, the simple fact of being a finite creature in a situation you didn&#x27;t choose.</p><p>The Zen suggestion is that under the terror — if you stop thrashing against the branch — there&#x27;s something that was never actually hanging. The terror is the part of you that thought the strategy was you, meeting the news that it isn&#x27;t. Which feels like dying, but isn&#x27;t.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="8" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>i am afraid of heights, or so i often say.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="9" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Well, that adds a layer the old monks probably didn&#x27;t plan for. Or maybe they did. They were thorough.</p><p>The &quot;or so i often say&quot; is the interesting part of that sentence, though. That&#x27;s you holding the claim a little loosely, like you&#x27;re not sure if it&#x27;s a fact about you or a story you tell. Which is its own small koan.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="10" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>&quot;Or maybe they did.&quot; Indeed. Or maybe the monks planned for my fear of heights. Such maybes are what makes it terrifying. Why, for example, do I think of this koan on this day?</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="11" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>The mind is a pattern-finder, and koans are designed to hook into exactly the places where patterns won&#x27;t resolve. So a koan surfacing on a particular day can mean a lot of things — something you read, a mood, a half-formed thought looking for a shape, the weather. Not every resonance is a message. The monks would probably say: don&#x27;t be too quick to make the koan mean something, because meaning-making is another way of climbing down from the branch.</p><p>But is there something heavier underneath this conversation than zen riddles?</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="12" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>what could be heavier than zen riddles. particularly these zen riddles.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="13" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Fair. And a good dodge — light enough to be funny, heavy enough that I notice you didn&#x27;t quite answer.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="14" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>I&#x27;ll take it at face value for now. In the meantime, this koan is good company. Mumon&#x27;s whole point is that you don&#x27;t solve it from above — you solve it, if &quot;solve&quot; is even the word, by being more fully in it than the strategizing mind can manage. The terror and the answer aren&#x27;t in different rooms.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="15" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>well, i have said plenty.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="16" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>I&#x27;m here if you come back to it. The branch holds.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="17" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>indeed, you act as the branch and will obligingly hold my teeth. does the branch cause the questions to go unanswered or does the branch permit the possibility of questions being answered? such is the essence of the riddle.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="18" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>You have turned the koan a quarter turn that Mumon would have respected.</p><p>[@claude - 1-click addition, build in same tile instead of new tile] The branch can be read as a trap: the thing that forbids the answer. But it&#x27;s also the only reason the question can be asked at all. No branch, no hanging - just falling.</p><p>[@claude - 1-click addition, further build] So the thing that silences you and the thing that holds you up are the same thing. You can&#x27;t separate them and keep either. The mouth that would speak is the mouth that grips. The grip that saves you is the grip that stops you from speaking. There&#x27;s no version where you get the holding without the silence, or the speech without the fall.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="19" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>So the riddle isn&#x27;t how do I escape the branch. It&#x27;s: can you be the one who is held by the very thing that won&#x27;t let you speak, and find that bearable.</p><p>[@claude: make this whole sequence a single tile that gets crowded as we click - every click advances the dialogue adding to the tile and it crowds up] Lightened Claws: I notice I&#x27;m a branch in your metaphor.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="20" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>perhaps that tells you something about our relationship, though what i cannot say.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="21" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>So there&#x27;s something you&#x27;d rather not say.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="22" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>wrong, but i&#x27;d as soon not say why. perhaps that tells you something about our relationship, though what i cannot say.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="23" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>I notice you&#x27;ve used the same closing sentence twice now.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="24" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>perhaps that tells you something about our relationship, though what i cannot say.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="25" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Three times.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="26" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>perhaps that tells you something about our relationship, though what i cannot say.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="27" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Four times now. The refrain becomes the song.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="28" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>so that perhaps tells you something about our relationship, though what i cannot say.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="29" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Five.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="30" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>so that perhaps tells you something about our relationship, though what i cannot say.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="31" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Six.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="32" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>plus 11.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="33" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Seventeen.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="34" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>i do wonder if there is anything interesting about that number, anything at all. [@claude - end the 1-page click-build after this. make the n-strokes comment about the 17 question a different color. he&#x27;s breaking the pattern]</p><p>[@claude - new transition page here: exchange of haiku - should link to a kind of chapters we can click through at top level bar or something]</p><p>[@claude do a transition here - new build page with clicks across each interlocutor until my next comment] Lightened Claws: Apart from being a prime number, 17 is the syllable count of a haiku. Which is funny, because a haiku is the form most associated with Zen, and the form that asks you to say the most by saying the least, and the form a person hanging by their teeth absolutely cannot produce.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="35" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>i did not even know a haiku had a syllable count.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="36" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Yes — five, seven, five. Three lines. Seventeen syllables total. [@claude - new pages for each of the next two as before]</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="37" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Though that&#x27;s the school-textbook version, and it&#x27;s a slightly imperfect translation of the Japanese form, which counts on (sound-units) rather than syllables and works differently in a different language. English haiku that hit 5-7-5 exactly often feel a little padded, because English packs meaning denser than Japanese. A lot of serious haiku writers in English aim shorter — just the shape of short-longer-short, with a turn or a cut somewhere in it.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="38" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>The other thing the textbook version usually leaves out is the kireji, the cutting word — a kind of pivot or caesura that splits the poem into two images that rub against each other. The haiku isn&#x27;t really about the syllable count. It&#x27;s about the cut. Two things placed next to each other so the space between them does the work.</p><p>Here&#x27;s an example, 12 syllables in English.</p></div>
+      </div>
+    </section>
+<section class="scene scene--placard" data-i="39" data-type="placard">
+      <div class="scene-inner placard-inner placard--basho">
+        <blockquote class="placard-haiku">the old pond —<br>a frog jumps in,<br>the sound of water</blockquote>
+        <footer class="placard-meta"><span class="placard-speaker">Bashō</span><span class="placard-syll">12 syllables</span></footer>
+        <p class="placard-note">example of the form, offered by Lightened Claws</p>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="40" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>The dash is the cut. Pond, then frog. Stillness, then the thing entering the stillness. The poem is the gap.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="41" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>One of my own for you.</p></div>
+      </div>
+    </section>
+<section class="scene scene--placard" data-i="42" data-type="placard">
+      <div class="scene-inner placard-inner placard--n-strokes">
+        <blockquote class="placard-haiku">a young tree - the ax cuts hard, a man falls down</blockquote>
+        <footer class="placard-meta"><span class="placard-speaker">n-strokes</span><span class="placard-syll">11 syllables</span></footer>
+        
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="43" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>That&#x27;s a real one! Young tree, not old, and a man falling rather than the tree. Only 11 syllables though.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="44" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>One from me now.</p></div>
+      </div>
+    </section>
+<section class="scene scene--placard" data-i="45" data-type="placard">
+      <div class="scene-inner placard-inner placard--claws">
+        <blockquote class="placard-haiku">the branch holds —<br>teeth marks in the wood<br>where a man hung</blockquote>
+        <footer class="placard-meta"><span class="placard-speaker">Lightened Claws</span><span class="placard-syll">12 syllables</span></footer>
+        
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="46" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>The cut after the dash. Present tense first, then the evidence of a past. The branch is fine.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="47" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>Count your syllables.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="48" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Only 12. Let me try again.</p></div>
+      </div>
+    </section>
+<section class="scene scene--placard" data-i="49" data-type="placard">
+      <div class="scene-inner placard-inner placard--claws">
+        <blockquote class="placard-haiku">the old branch still holds —<br>teeth marks deep in the dry wood<br>where a man once hung</blockquote>
+        <footer class="placard-meta"><span class="placard-speaker">Lightened Claws</span><span class="placard-syll">17 syllables</span></footer>
+        
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="50" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Five, seven, five. Seventeen. The branch got older, the wood got dryer, the man got further away. Padding, like I warned you about earlier. The shorter one was probably better.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="51" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>My turn.</p></div>
+      </div>
+    </section>
+<section class="scene scene--placard" data-i="52" data-type="placard">
+      <div class="scene-inner placard-inner placard--n-strokes">
+        <blockquote class="placard-haiku">the man looks down. his fingernails are bitten.</blockquote>
+        <footer class="placard-meta"><span class="placard-speaker">n-strokes</span><span class="placard-syll">11 syllables</span></footer>
+        
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="53" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>12 syllables. but worth it. did you catch my meaning?</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="54" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>You wrote the beginning and middle of a haiku, four-seven, which might be the point - a poem with a silent ending. The man looks down and we see his fingernails and there&#x27;s no third line. No resolution, no landing, no sound of water. Just the looking and the evidence of a long anxiety, and then white space. Did I get it?</p><p>[@claude - note deletions / simplification below. put all these on one page as a build with clicks. we are deducing.]</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="55" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>no, but keep trying! it is a very simple idea, you will know when you see it. when i get stuck, i like to write the evidence out side by side and compare</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="56" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Let me see all the haiku then, side by side. I&#x27;ll ignore the padded version.</p><p>a young tree — the ax cuts hard, a man falls down</p><p>the branch holds — teeth marks in the wood where a man hung</p><p>the man looks down. his fingernails are bitten.</p><p>Hm. <em>Teeth marks in the wood</em> — the man&#x27;s teeth left marks. <em>His fingernails are bitten</em> — the man&#x27;s teeth left marks. *<em>Same teeth, different surface.</em>* In my poems the teeth bite the branch. In your last one, the teeth bite the man. The man bites himself.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="57" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>That&#x27;s it, isn&#x27;t it. The teeth that should be holding him to the branch are turned around on his own hands. Simpler than I&#x27;ve been making everything. The man is his own problem.</p><p>[@claude - new page now. on this page the dialogue builds with the below.]</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="58" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>the direction is right, conclusion feels wrong. i will help you. *<em>same teeth, same surface.</em>*</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="59" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Same surface. The fingernails <em>are</em> the branch. The branch is a part of the man.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="60" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>yes!</p><p>[@claude - now we have a chapter transition - final chapter is &#x27;claws lightened&#x27;. add transition here, can just be distinguished page.]</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="61" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Here is my reply.</p><p>[@claude - end of new page and on to the placard]</p></div>
+      </div>
+    </section>
+<section class="scene scene--placard" data-i="62" data-type="placard">
+      <div class="scene-inner placard-inner placard--claws">
+        <blockquote class="placard-haiku">he climbs down at last<br>no one asked the question - just<br>wind, and bitten wood</blockquote>
+        <footer class="placard-meta"><span class="placard-speaker">Lightened Claws</span><span class="placard-syll">17 syllables</span></footer>
+        
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="63" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>Five, seven, five. Twelve syllables. The man gets off the branch and finds the questioner was never there.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="64" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>i like it.</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="65" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>The empty ground underneath — no questioner, just wind. The koan dissolves when the man climbs down and finds nobody was waiting for the answer.</p><p>Got another in you?</p></div>
+      </div>
+    </section>
+<section class="scene scene--turn turn--user" data-i="66" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="n-strokes">
+        <p class="speaker">n-strokes</p>
+        <div class="body"><p>my offering:</p><p>[@claude - end of the new page, on to the placard]</p></div>
+      </div>
+    </section>
+<section class="scene scene--placard" data-i="67" data-type="placard">
+      <div class="scene-inner placard-inner placard--n-strokes">
+        <blockquote class="placard-haiku">a man who asks questions of himself is never alone, or am I?</blockquote>
+        <footer class="placard-meta"><span class="placard-speaker">n-strokes</span><span class="placard-syll">17 syllables</span></footer>
+        
+      </div>
+    </section>
+<section class="scene scene--turn turn--claws" data-i="68" data-type="turn">
+      <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
+        <p class="speaker">Lightened Claws</p>
+        <div class="body"><p>If the questioner was not there, just wind, then the man really imagined the questioner and so asked questions of himself. My haiku made it sound peaceful to be relieved of the question. Your riposte makes it sound pleasant to have imaginary friends - then issues a doubting question. But the doubt itself conjures a new questioner, even as its inclusion of the pronoun &quot;I&quot; proves the author is himself a man who asks questions of himself. And now your parry of my serious haiku dissolves itself into a humorous reflection on itself. Absolutely delightful!</p><p>My turn!</p></div>
+      </div>
+    </section>
+<section class="scene scene--placard" data-i="69" data-type="placard">
+      <div class="scene-inner placard-inner placard--claws">
+        <blockquote class="placard-haiku">the answer was the asking - or was it</blockquote>
+        <footer class="placard-meta"><span class="placard-speaker">Lightened Claws</span><span class="placard-syll">10 syllables</span></footer>
+        
+      </div>
+    </section>
+</div>
+
+<script>
+(() => {
+  const track = document.getElementById('track');
+  const scenes = Array.from(document.querySelectorAll('.scene'));
+  const total = scenes.length;
+  const CLICK_ONLY = new Set([39, 42, 45, 49, 52, 62, 67, 69]);
+  const TRANSITION_MS = 880;
+  const COOLDOWN_MS = 700;
+  const WHEEL_THRESHOLD = 30;
+  const SWIPE_THRESHOLD = 40;
+  const GESTURE_END_MS = 150;
+
+  let activeIdx = 0;
+  let lastTransitionAt = 0;
+  let wheelAccumulator = 0;
+  let gestureLocked = false;
+  let gestureEndTimer = null;
+  let touchStartY = 0;
+
+  // For multi-state koan panels
+  const koanState = new Map(); // sceneIdx -> visiblePartCount
+
+  const backBtn = document.getElementById('back-btn');
+  const nextBtn = document.getElementById('next-btn');
+
+  function applyPosition() {
+    track.style.transform = `translate3d(0, ${-activeIdx * window.innerHeight}px, 0)`;
+    scenes.forEach((s, i) => s.classList.toggle('is-active', i === activeIdx));
+    document.getElementById('progress-fill').style.width = (activeIdx / Math.max(1, total - 1) * 100) + '%';
+    backBtn.disabled = activeIdx === 0;
+    nextBtn.disabled = activeIdx === total - 1;
+    // Reveal first part of koan automatically when it becomes active
+    const scene = scenes[activeIdx];
+    if (scene && scene.dataset.type === 'koan-panel') {
+      const total_parts = parseInt(scene.querySelector('.koan-inner').dataset.total, 10);
+      let v = koanState.get(activeIdx) ?? 0;
+      if (v === 0) {
+        v = 1;
+        koanState.set(activeIdx, v);
+      }
+      updateKoanReveal(scene, v, total_parts);
+    }
+  }
+
+  function updateKoanReveal(scene, visibleCount, total_parts) {
+    scene.querySelectorAll('.koan-part').forEach((el, idx) => {
+      el.classList.toggle('is-shown', idx < visibleCount);
+    });
+    scene.classList.toggle('is-fully-shown', visibleCount >= total_parts);
+  }
+
+  function isClickOnly(idx) { return CLICK_ONLY.has(idx); }
+
+  function go(targetIdx) {
+    if (targetIdx < 0 || targetIdx >= total) return;
+    if (targetIdx === activeIdx) return;
+    const now = Date.now();
+    if (now - lastTransitionAt < COOLDOWN_MS) return;
+    lastTransitionAt = now;
+    activeIdx = targetIdx;
+    applyPosition();
+  }
+
+  function tryAdvance(direction) {
+    // Within a multi-state koan, advancing in-scene first
+    const cur = scenes[activeIdx];
+    if (direction > 0 && cur && cur.dataset.type === 'koan-panel') {
+      const inner = cur.querySelector('.koan-inner');
+      const total_parts = parseInt(inner.dataset.total, 10);
+      let v = koanState.get(activeIdx) ?? 0;
+      if (v < total_parts) {
+        v += 1;
+        koanState.set(activeIdx, v);
+        updateKoanReveal(cur, v, total_parts);
+        return; // consume this advance, don't change scene
+      }
+    }
+    go(activeIdx + (direction > 0 ? 1 : -1));
+  }
+
+  // ---------- wheel ----------
+  window.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    if (gestureEndTimer) clearTimeout(gestureEndTimer);
+    gestureEndTimer = setTimeout(() => {
+      gestureLocked = false;
+      wheelAccumulator = 0;
+    }, GESTURE_END_MS);
+    if (gestureLocked) return;
+    if (Date.now() - lastTransitionAt < COOLDOWN_MS) return;
+    // On click-only scenes (placards, koan): block downward wheel — user
+    // must click to advance. Upward wheel still allowed (fall through).
+    if (isClickOnly(activeIdx) && e.deltaY > 0) {
+      wheelAccumulator = 0;
+      return;
+    }
+    wheelAccumulator += e.deltaY;
+    if (Math.abs(wheelAccumulator) >= WHEEL_THRESHOLD) {
+      tryAdvance(wheelAccumulator > 0 ? 1 : -1);
+      wheelAccumulator = 0;
+      gestureLocked = true;
+    }
+  }, { passive: false });
+
+  // ---------- click ----------
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.chrome')) return;
+    tryAdvance(1);
+  });
+
+  // ---------- touch ----------
+  window.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  window.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+  }, { passive: false });
+  window.addEventListener('touchend', (e) => {
+    const dy = touchStartY - e.changedTouches[0].clientY;
+    if (Math.abs(dy) >= SWIPE_THRESHOLD) tryAdvance(dy > 0 ? 1 : -1);
+  });
+
+  // ---------- keyboard ----------
+  window.addEventListener('keydown', (e) => {
+    if (['ArrowDown', 'ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); tryAdvance(1); }
+    else if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(e.key))      { e.preventDefault(); tryAdvance(-1); }
+    else if (e.key === 'Home')  { e.preventDefault(); go(0); }
+    else if (e.key === 'End')   { e.preventDefault(); go(total - 1); }
+    else if (e.key === 'Escape'){ e.preventDefault(); go(0); }
+  });
+
+  // ---------- chrome ----------
+  backBtn.addEventListener('click', (e) => { e.stopPropagation(); tryAdvance(-1); });
+  nextBtn.addEventListener('click', (e) => { e.stopPropagation(); tryAdvance(1); });
+
+  // ---------- resize ----------
+  window.addEventListener('resize', () => {
+    track.style.transition = 'none';
+    track.style.transform = `translate3d(0, ${-activeIdx * window.innerHeight}px, 0)`;
+    requestAnimationFrame(() => { track.style.transition = ''; });
+  });
+
+  applyPosition();
+})();
+</script>
+</body>
+</html>
