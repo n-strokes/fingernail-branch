@@ -332,13 +332,23 @@ while i < N:
 
 flush_build()
 
-# Prepend intro, then preface (so preface ends up first)
-scenes.insert(0, {'type': 'intro', 'chapter': 0})
+# Prepend in reverse order so final sequence is: title → intro (illustration) → preface → ...
 scenes.insert(0, {'type': 'preface', 'chapter': 0})
+scenes.insert(0, {'type': 'intro', 'chapter': 0})
+scenes.insert(0, {'type': 'title', 'chapter': 0})
 
 # ==========================================================================
 # Render
 # ==========================================================================
+
+def render_title(s):
+    return '''
+      <div class="scene-inner title-inner">
+        <h1 class="title-main">Same teeth,<br>same surface</h1>
+        <p class="title-sub">a dialogue with n-strokes and lightened claws</p>
+      </div>
+      <p class="title-enter">↓</p>
+    '''
 
 def render_preface(s):
     paras_html = '\n'.join(f'<p>{escape(p)}</p>' for p in PREFACE_PARAGRAPHS)
@@ -473,6 +483,8 @@ def render_scene(i, s):
     t = s['type']
     ch = s.get('chapter', 0) if t != 'chapter-transition' else s.get('number', 0)
     common = f'data-i="{i}" data-type="{t}" data-chapter="{ch}"'
+    if t == 'title':
+        return f'<section class="scene scene--title" {common}>{render_title(s)}</section>'
     if t == 'preface':
         return f'<section class="scene scene--preface" {common}>{render_preface(s)}</section>'
     if t == 'intro':
@@ -779,6 +791,49 @@ strong { font-weight: 600; }
 }
 .commentary-body p { margin: 0 0 1.25rem; }
 .commentary-body p:last-child { margin-bottom: 0; }
+
+/* title */
+.scene--title {
+  background: var(--commentary-bg);
+  color: var(--commentary-ink);
+}
+.scene--title::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 35% 45%, rgba(120, 100, 60, 0.20) 0%, transparent 60%),
+    radial-gradient(ellipse at 65% 55%, rgba(80, 90, 100, 0.18) 0%, transparent 65%);
+  pointer-events: none;
+}
+.title-inner {
+  position: relative; z-index: 1;
+  text-align: center; max-width: 42rem;
+}
+.title-main {
+  font-family: var(--font-serif);
+  font-style: italic; font-weight: 400;
+  font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+  line-height: 1.15;
+  margin: 0 0 2.75rem;
+  color: var(--commentary-ink);
+}
+.title-sub {
+  font-family: var(--font-mono);
+  font-size: clamp(13px, 1.1vw, 15px);
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(239, 233, 217, 0.7);
+  margin: 0;
+}
+.title-enter {
+  position: absolute;
+  bottom: 2rem; left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: rgba(239, 233, 217, 0.55);
+  margin: 0;
+  z-index: 2;
+  animation: bob-centered 2.4s ease-in-out infinite;
+}
 
 /* preface */
 .preface-inner { max-width: 38rem; text-align: center; }
