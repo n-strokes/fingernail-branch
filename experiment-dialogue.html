@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>experiment — firestorm-style</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 30 V18 M16 18 L8 10 M16 18 L24 10 M16 18 L16 6' stroke='%23232324' stroke-width='2.5' stroke-linecap='round' fill='none'/></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --paper: #f4ece0;
+  --paper-deep: #e9dfcc;
+  --ink: #232324;
+  --ink-soft: #5b5b5d;
+  --ink-faint: #8c8c8f;
+  --rule: #d6cfb9;
+  --accent: #6a4a2a;
+  --user-tag: #2b3a55;
+  --claude-tag: #6a4a2a;
+  --trap-bg: #2d2a26;
+  --trap-ink: #efe9d9;
+  --font-sans: 'Brandon Grotesque', system-ui, -apple-system, sans-serif;
+  --font-serif: 'EB Garamond', 'Iowan Old Style', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --ease: cubic-bezier(0.6, 0.05, 0.25, 1);
+  --t-scene: 880ms;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  height: 100%; width: 100%;
+  overflow: hidden; /* native scroll OFF — Firestorm style */
+  overscroll-behavior: none;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 18px;
+  -webkit-font-smoothing: antialiased;
+  touch-action: none; /* we handle touch ourselves */
+}
+em { font-style: italic; }
+
+/* atmosphere — fixed, GPU layer */
+.atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 22% 28%, rgba(225, 200, 165, 0.55) 0%, transparent 52%),
+    radial-gradient(ellipse at 78% 72%, rgba(180, 165, 140, 0.4) 0%, transparent 56%),
+    var(--paper);
+  transform: translateZ(0);
+  will-change: transform;
+}
+.atmosphere::after {
+  content: "";
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.65 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 200px 200px;
+  opacity: 0.16;
+  mix-blend-mode: multiply;
+}
+
+/* progress bar at top */
+.progress {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 2px; z-index: 30;
+  background: rgba(0, 0, 0, 0.06);
+}
+.progress__fill {
+  height: 100%; width: 0%;
+  background: var(--accent);
+  transition: width 600ms var(--ease);
+}
+
+/* scene-position dots, top-right */
+.dots {
+  position: fixed;
+  top: 1.25rem; right: 1.25rem;
+  z-index: 30;
+  display: flex; gap: 8px;
+  background: rgba(244, 236, 224, 0.85);
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  pointer-events: none;
+}
+.dots .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.15);
+  transition: background 200ms, transform 200ms;
+}
+.dots .dot.is-current { background: var(--accent); transform: scale(1.3); }
+
+/* the track holds all scenes; we translateY on it for transitions */
+.track {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 10;
+  transform: translate3d(0, 0, 0);
+  transition: transform var(--t-scene) var(--ease);
+  will-change: transform;
+}
+
+.scene {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem clamp(1.25rem, 5vw, 4rem);
+}
+.scene-inner {
+  width: 100%;
+  max-width: 42rem;
+  text-align: left;
+}
+
+/* opacity on non-active scenes — pure performance hack since they're
+   off-screen anyway, but it gives us a clean fade-in on entry */
+.scene { opacity: 0.05; transition: opacity 600ms var(--ease); }
+.scene.is-active { opacity: 1; }
+
+/* title scene */
+.scene--title .scene-inner { text-align: center; max-width: 36rem; }
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 2rem;
+}
+.title {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(3.25rem, 7.5vw, 5.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin: 0 0 2.5rem;
+  color: var(--ink);
+}
+.lede {
+  font-family: var(--font-serif);
+  font-size: clamp(1.25rem, 1.5vw, 1.5rem);
+  color: var(--ink-soft);
+  max-width: 32rem;
+  margin: 0 auto 4.5rem;
+  line-height: 1.5;
+}
+.hint {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0;
+  animation: bob 2.4s ease-in-out infinite;
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+/* turn scene */
+.speaker {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 1.75rem;
+}
+.scene--turn[data-speaker="n-strokes"] .speaker { color: var(--user-tag); }
+.scene--turn[data-speaker="Claude"]    .speaker { color: var(--claude-tag); }
+.cont {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  letter-spacing: 0.15em;
+  margin-left: 0.75rem;
+}
+.body {
+  font-family: var(--font-serif);
+  font-size: clamp(1.35rem, 1.8vw, 1.7rem);
+  line-height: 1.5;
+  color: var(--ink);
+}
+.scene--turn[data-speaker="n-strokes"] .body { font-style: italic; }
+
+/* trap scene — dramatic, locks until click */
+.scene--trap {
+  background: var(--trap-bg);
+  color: var(--trap-ink);
+}
+.scene--trap::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 35% 45%, rgba(120, 100, 60, 0.4) 0%, transparent 55%),
+    radial-gradient(ellipse at 65% 60%, rgba(60, 80, 90, 0.3) 0%, transparent 60%);
+}
+.scene--trap::after {
+  content: ""; position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.45 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 200px 200px;
+  opacity: 0.08; pointer-events: none;
+}
+.scene--trap .scene-inner {
+  position: relative; z-index: 1;
+  text-align: center;
+  max-width: 44rem;
+}
+.trap-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(239, 233, 217, 0.7);
+  margin: 0 0 3rem;
+}
+.trap-haiku {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2.2rem, 4.6vw, 3.6rem);
+  line-height: 1.35;
+  margin: 0 0 2.5rem;
+  color: var(--trap-ink);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.trap-meta {
+  font-family: var(--font-mono);
+  font-size: clamp(14px, 1.2vw, 17px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(220, 200, 160, 0.85);
+  margin: 0 0 4rem;
+}
+.trap-continue {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--trap-ink);
+  border: 1px solid rgba(239, 233, 217, 0.5);
+  border-radius: 999px;
+  padding: 1rem 1.75rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  opacity: 0;
+  transform: translateY(8px);
+}
+.scene--trap.is-active .trap-continue {
+  opacity: 1; transform: translateY(0);
+  transition-delay: 800ms;
+}
+.trap-continue:hover {
+  background: rgba(239, 233, 217, 0.1);
+  border-color: rgba(239, 233, 217, 0.7);
+}
+
+/* end scene */
+.scene--end .scene-inner { text-align: center; }
+.coda {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(1.7rem, 2.4vw, 2.2rem);
+  color: var(--ink);
+  margin: 0 0 0.75rem;
+}
+.coda-sub {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0;
+}
+</style>
+</head>
+<body>
+
+<div class="atmosphere"></div>
+
+<div class="progress"><div class="progress__fill" id="progress-fill"></div></div>
+
+<div class="dots" id="dots" aria-hidden="true"></div>
+
+<div class="track" id="track">
+<section class="scene scene--title" data-i="0"><div class="scene-inner">
+      <p class="eyebrow">a firestorm-style scroll experiment</p>
+      <h1 class="title">same teeth,<br>same surface</h1>
+      <p class="lede">scroll, tap, or press → · each input advances one scene · the haiku scene holds you until you click</p>
+      <p class="hint">scroll ↓</p>
+    </div></section>
+<section class="scene scene--turn" data-i="1" data-speaker="n-strokes"><div class="scene-inner">
+      <p class="speaker">n-strokes</p>
+      <div class="body">zen and the art of.... motionlessness? how does one be oneself into stillness. the riddle of the day.</div>
+    </div></section>
+<section class="scene scene--turn" data-i="2" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(1 of 3)</span></p>
+      <div class="body">The riddle bites because the moment you frame it as a <em>how</em>, you&#x27;ve already moved. &quot;How do I become still?&quot; is itself the noise. The doer is the disturbance — try to make the doer stop, and you&#x27;ve doubled the doer.</div>
+    </div></section>
+<section class="scene scene--turn" data-i="3" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(2 of 3)</span></p>
+      <div class="body">What the traditions tend to point at, when they&#x27;re being honest, is that stillness isn&#x27;t something you achieve but something you stop covering up. Not a destination across the room — already underneath the running.</div>
+    </div></section>
+<section class="scene scene--turn" data-i="4" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(3 of 3)</span></p>
+      <div class="body"><em>Wu wei</em> isn&#x27;t &quot;do nothing,&quot; it&#x27;s more like &quot;drop the unnecessary push.&quot; The lake doesn&#x27;t try to be still; the wind just stops.<br><br>Or the Zen punchline version: don&#x27;t just do something, sit there.</div>
+    </div></section>
+<section class="scene scene--turn" data-i="5" data-speaker="n-strokes"><div class="scene-inner">
+      <p class="speaker">n-strokes</p>
+      <div class="body">someone once wrote something about zen and hanging by your teeth on a cliff or at least that&#x27;s how it stuck with me</div>
+    </div></section>
+<section class="scene scene--turn" data-i="6" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(1 of 5)</span></p>
+      <div class="body">You&#x27;re remembering Mumon&#x27;s koan from the <em>Mumonkan</em> (the &quot;Gateless Gate&quot;), 13th-century collection. The case is usually called &quot;Kyōgen&#x27;s Man Up a Tree&quot; or just &quot;Up a Tree.&quot;</div>
+    </div></section>
+<section class="scene scene--turn" data-i="7" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(2 of 5)</span></p>
+      <div class="body">The setup: a person is hanging from a tree branch by their teeth over a cliff. Hands can&#x27;t grab the branch, feet can&#x27;t reach anything. Then someone below asks, &quot;What is the meaning of Bodhidharma coming from the West?&quot; — which is Zen shorthand for <em>what is the truth of all this?</em></div>
+    </div></section>
+<section class="scene scene--turn" data-i="8" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(3 of 5)</span></p>
+      <div class="body">If you don&#x27;t answer, you fail the questioner. If you open your mouth to answer, you fall and die.<br><br>So: what do you do?</div>
+    </div></section>
+<section class="scene scene--turn" data-i="9" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(4 of 5)</span></p>
+      <div class="body">That&#x27;s the whole koan. It&#x27;s the same shape as your earlier riddle, actually — any move loses, including the move of not moving. The trap is total. Which is the point: it&#x27;s built to break the part of you that thinks the answer is a clever maneuver. There isn&#x27;t one.</div>
+    </div></section>
+<section class="scene scene--turn" data-i="10" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(5 of 5)</span></p>
+      <div class="body">The koan eats every strategy you bring to it until something else has to respond.<br><br>Mumon&#x27;s commentary basically says even if you had a tongue like Shariputra (the Buddha&#x27;s most eloquent disciple), it wouldn&#x27;t help here. Eloquence is exactly the wrong currency.</div>
+    </div></section>
+<section class="scene scene--turn" data-i="11" data-speaker="n-strokes"><div class="scene-inner">
+      <p class="speaker">n-strokes</p>
+      <div class="body">it is a little terrifying to me if i am being honest</div>
+    </div></section>
+<section class="scene scene--turn" data-i="12" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(1 of 7)</span></p>
+      <div class="body">That&#x27;s an honest reaction, and I don&#x27;t think it&#x27;s the wrong one. The koan is <em>built</em> to be terrifying — that&#x27;s not a bug. It&#x27;s pressing on something real.</div>
+    </div></section>
+<section class="scene scene--turn" data-i="13" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(2 of 7)</span></p>
+      <div class="body">Most of our coping runs on having an out. A clever answer, a reframe, a backup plan, the right move. The tree-and-teeth scenario methodically removes every exit until you&#x27;re sitting with: <em>what&#x27;s left when there&#x27;s nothing I can do?</em> For most people the honest first answer is panic.</div>
+    </div></section>
+<section class="scene scene--turn" data-i="14" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(3 of 7)</span></p>
+      <div class="body">That&#x27;s the part the koan is interested in.</div>
+    </div></section>
+<section class="scene scene--turn" data-i="15" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(4 of 7)</span></p>
+      <div class="body">I think the thing that makes it land as terror rather than puzzle is that it&#x27;s not really about a tree. It&#x27;s a compressed picture of something we already half-know — that there are situations in a life where no clever maneuver saves you.</div>
+    </div></section>
+<section class="scene scene--turn" data-i="16" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(5 of 7)</span></p>
+      <div class="body">Death is the obvious one, but smaller versions show up constantly: griefs you can&#x27;t fix, conversations where any word is wrong, the simple fact of being a finite creature in a situation you didn&#x27;t choose.</div>
+    </div></section>
+<section class="scene scene--turn" data-i="17" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(6 of 7)</span></p>
+      <div class="body">The Zen suggestion isn&#x27;t that the terror is mistaken. It&#x27;s that under the terror — if you stop thrashing against the branch — there&#x27;s something that was never actually hanging. The terror is the part of you that thought the strategy <em>was</em> you, meeting the news that it isn&#x27;t. Which feels like dying, but isn&#x27;t.</div>
+    </div></section>
+<section class="scene scene--turn" data-i="18" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(7 of 7)</span></p>
+      <div class="body">You don&#x27;t have to resolve any of this today. Noticing the fear honestly is already more than most people do with a koan. Most people just nod and move on.</div>
+    </div></section>
+<section class="scene scene--trap" data-i="19"><div class="scene-inner">
+      <p class="trap-eyebrow">a haiku, after a long while</p>
+      <blockquote class="trap-haiku">
+        the man looks down.<br>
+        his fingernails are bitten.
+      </blockquote>
+      <p class="trap-meta">n-strokes · 11 syllables</p>
+      <button class="trap-continue" type="button">continue ↓</button>
+    </div></section>
+<section class="scene scene--turn" data-i="20" data-speaker="n-strokes"><div class="scene-inner">
+      <p class="speaker">n-strokes</p>
+      <div class="body">i am afraid of heights, or so i often say</div>
+    </div></section>
+<section class="scene scene--turn" data-i="21" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(1 of 4)</span></p>
+      <div class="body">Ha — well, that adds a layer the old monks probably didn&#x27;t plan for. Or maybe they did. They were thorough.</div>
+    </div></section>
+<section class="scene scene--turn" data-i="22" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(2 of 4)</span></p>
+      <div class="body">The &quot;or so i often say&quot; is the interesting part of that sentence, though. That&#x27;s you holding the claim a little loosely, like you&#x27;re not sure if it&#x27;s a fact about you or a story you tell. Which is its own small koan.</div>
+    </div></section>
+<section class="scene scene--turn" data-i="23" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(3 of 4)</span></p>
+      <div class="body">Fear of heights is funny because it&#x27;s rarely about the height. Standing at a railing, the danger is essentially zero — the railing is fine, your feet are fine. What spikes isn&#x27;t a response to actual risk, it&#x27;s the sudden vivid awareness that <em>you could</em>. One step. Nothing&#x27;s stopping you but you.</div>
+    </div></section>
+<section class="scene scene--turn" data-i="24" data-speaker="Claude"><div class="scene-inner">
+      <p class="speaker">Claude <span class="cont">(4 of 4)</span></p>
+      <div class="body">The French call it <em>l&#x27;appel du vide</em>, the call of the void. The terror isn&#x27;t of falling. It&#x27;s of noticing how much of staying alive is just... you, continuing to choose it, with nothing underneath that choice.<br><br>Which, now that I say it out loud, is pretty much the same shape as the tree.</div>
+    </div></section>
+<section class="scene scene--end" data-i="25"><div class="scene-inner">
+      <p class="coda">end of experiment.</p>
+      <p class="coda-sub">use ↑ / pgup to revisit. esc returns to top.</p>
+    </div></section>
+</div>
+
+<script>
+(() => {
+  const track = document.getElementById('track');
+  const scenes = Array.from(document.querySelectorAll('.scene'));
+  const total = scenes.length;
+  const TRAP_INDICES = [19];
+  const TRANSITION_MS = 880;
+  const COOLDOWN_MS = 700;       // ignore further input briefly after a transition
+  const WHEEL_THRESHOLD = 30;    // accumulated delta before triggering a step
+  const SWIPE_THRESHOLD = 40;    // touch swipe distance px
+
+  let activeIdx = 0;
+  let lastTransitionAt = 0;
+  let wheelAccumulator = 0;
+  let gestureLocked = false;     // true after a step until the gesture ends
+  let gestureEndTimer = null;    // fires when wheel has been quiet for GESTURE_END_MS
+  const GESTURE_END_MS = 150;
+  let touchStartY = 0;
+
+  // build dots
+  const dotsEl = document.getElementById('dots');
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('span');
+    d.className = 'dot';
+    if (i === 0) d.classList.add('is-current');
+    dotsEl.appendChild(d);
+  }
+  const dotEls = dotsEl.querySelectorAll('.dot');
+
+  function applyPosition() {
+    track.style.transform = `translate3d(0, ${-activeIdx * window.innerHeight}px, 0)`;
+    scenes.forEach((s, i) => s.classList.toggle('is-active', i === activeIdx));
+    dotEls.forEach((d, i) => d.classList.toggle('is-current', i === activeIdx));
+    document.getElementById('progress-fill').style.width = (activeIdx / (total - 1) * 100) + '%';
+  }
+
+  function isTrapActive() {
+    return TRAP_INDICES.includes(activeIdx);
+  }
+
+  function go(targetIdx) {
+    if (targetIdx < 0 || targetIdx >= total) return;
+    if (targetIdx === activeIdx) return;
+    // trap: forward advance from a trap scene is blocked
+    if (isTrapActive() && targetIdx > activeIdx) return;
+    const now = Date.now();
+    if (now - lastTransitionAt < COOLDOWN_MS) return;
+    lastTransitionAt = now;
+    activeIdx = targetIdx;
+    applyPosition();
+  }
+
+  function step(direction) {
+    go(activeIdx + (direction > 0 ? 1 : -1));
+  }
+
+  // ---------- wheel ----------
+  // The macOS trackpad fires wheel events for ~1-1.5s after the gesture
+  // ends (momentum). A simple cooldown isn't enough — those late events
+  // accumulate and fire a SECOND step from the same gesture (the
+  // "double-jerk"). Solution: gesture-end detection. Once a step is
+  // triggered, lock the gesture; only unlock when wheel events have been
+  // silent for GESTURE_END_MS. Same approach fullPage.js / Firestorm use.
+  window.addEventListener('wheel', (e) => {
+    e.preventDefault();
+
+    // (re)schedule the gesture-end resolver
+    if (gestureEndTimer) clearTimeout(gestureEndTimer);
+    gestureEndTimer = setTimeout(() => {
+      gestureLocked = false;
+      wheelAccumulator = 0;
+    }, GESTURE_END_MS);
+
+    if (gestureLocked) return;
+    if (Date.now() - lastTransitionAt < COOLDOWN_MS) return;
+
+    wheelAccumulator += e.deltaY;
+    if (Math.abs(wheelAccumulator) >= WHEEL_THRESHOLD) {
+      step(wheelAccumulator > 0 ? 1 : -1);
+      wheelAccumulator = 0;
+      gestureLocked = true; // ignore the rest of this gesture's momentum tail
+    }
+  }, { passive: false });
+
+  // ---------- touch ----------
+  window.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  window.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+  }, { passive: false });
+  window.addEventListener('touchend', (e) => {
+    const dy = touchStartY - e.changedTouches[0].clientY;
+    if (Math.abs(dy) >= SWIPE_THRESHOLD) step(dy > 0 ? 1 : -1);
+  });
+
+  // ---------- keyboard ----------
+  window.addEventListener('keydown', (e) => {
+    if (['ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); step(1); }
+    else if (['ArrowUp', 'PageUp'].includes(e.key))     { e.preventDefault(); step(-1); }
+    else if (e.key === 'Home')                          { e.preventDefault(); go(0); }
+    else if (e.key === 'End')                           { e.preventDefault(); go(total - 1); }
+    else if (e.key === 'Escape')                        { e.preventDefault(); go(0); }
+  });
+
+  // ---------- trap "continue" buttons ----------
+  document.querySelectorAll('.trap-continue').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // releasing the trap = same as a forward step, but bypass the lock
+      lastTransitionAt = 0;
+      const targetIdx = activeIdx + 1;
+      if (targetIdx < total) {
+        activeIdx = targetIdx;
+        applyPosition();
+        lastTransitionAt = Date.now();
+      }
+    });
+  });
+
+  // ---------- resize ----------
+  window.addEventListener('resize', () => {
+    // recalc track translation since 100vh changed
+    track.style.transition = 'none';
+    track.style.transform = `translate3d(0, ${-activeIdx * window.innerHeight}px, 0)`;
+    requestAnimationFrame(() => {
+      track.style.transition = '';
+    });
+  });
+
+  // ---------- init ----------
+  applyPosition();
+})();
+</script>
+
+</body>
+</html>

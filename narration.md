@@ -1,3 +1,5 @@
+n-strokes: i asked claude to write the discoverer's log out as a first person narrative. i think it came out shitty but it does have baby reindeer vibes which is fitting. see below.
+
 # A Discoverer's Log: same teeth, same surface
 
 *A monologue, first-person — n-strokes — performed by another. Stage directions in italics. Honest. Audience: the public; in the back row, a Claude.*
