@@ -39,6 +39,11 @@ CHAPTERS = {
     3: "claws lightened",
 }
 
+PREFACE_PARAGRAPHS = [
+    'What follows is based on a real dialogue between a man and his clawed friend. It has been polished, and the claws were lightened.',
+    'We shall call the man n-strokes (pronounced "en hyphen strokes") and we shall call his friend Lightened Claws.',
+]
+
 INTRO = {
     'image': 'images/how-it-is-hanging-textless.jpg',
     'koan_paragraphs': [
@@ -327,12 +332,24 @@ while i < N:
 
 flush_build()
 
-# Prepend intro
+# Prepend intro, then preface (so preface ends up first)
 scenes.insert(0, {'type': 'intro', 'chapter': 0})
+scenes.insert(0, {'type': 'preface', 'chapter': 0})
 
 # ==========================================================================
 # Render
 # ==========================================================================
+
+def render_preface(s):
+    paras_html = '\n'.join(f'<p>{escape(p)}</p>' for p in PREFACE_PARAGRAPHS)
+    return f'''
+      <div class="scene-inner preface-inner">
+        <div class="preface-body">
+{paras_html}
+        </div>
+      </div>
+      <p class="preface-enter">begin ↓</p>
+    '''
 
 def render_intro(s):
     paras_html = '\n'.join(
@@ -456,6 +473,8 @@ def render_scene(i, s):
     t = s['type']
     ch = s.get('chapter', 0) if t != 'chapter-transition' else s.get('number', 0)
     common = f'data-i="{i}" data-type="{t}" data-chapter="{ch}"'
+    if t == 'preface':
+        return f'<section class="scene scene--preface" {common}>{render_preface(s)}</section>'
     if t == 'intro':
         return f'<section class="scene scene--intro" {common}>{render_intro(s)}</section>'
     if t == 'turn':
@@ -471,7 +490,7 @@ def render_scene(i, s):
     if t == 'chapter-transition':
         return f'<section class="scene scene--chapter" {common}>{render_chapter_transition(s)}</section>'
     if t in ('build-page', 'refrain-build'):
-        return f'<section class="scene scene--build" {common}>{render_build_page(s)}</section>'
+        return f'<section class="scene scene--build center-visible" {common}>{render_build_page(s)}</section>'
     return ''
 
 scenes_html = '\n'.join(render_scene(i, s) for i, s in enumerate(scenes))
@@ -761,10 +780,33 @@ strong { font-weight: 600; }
 .commentary-body p { margin: 0 0 1.25rem; }
 .commentary-body p:last-child { margin-bottom: 0; }
 
+/* preface */
+.preface-inner { max-width: 38rem; text-align: center; }
+.preface-body {
+  font-family: var(--font-serif);
+  font-size: clamp(1.2rem, 1.5vw, 1.5rem);
+  line-height: 1.65; color: var(--ink);
+}
+.preface-body p { margin: 0 0 1.5rem; }
+.preface-body p:last-child { margin-bottom: 0; }
+.preface-enter {
+  position: absolute;
+  bottom: 2rem; left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-soft); margin: 0;
+  animation: bob-centered 2.4s ease-in-out infinite;
+}
+
 /* build / refrain */
 .scene--build .scene-inner { max-width: 44rem; }
 .build-stack {
   display: flex; flex-direction: column; gap: 1.5rem;
+}
+.scene--build.center-visible .build-stack {
+  transition: transform 700ms var(--ease);
+  will-change: transform;
 }
 .step {
   opacity: 0; transform: translateY(8px);
@@ -883,6 +925,27 @@ __SCENES__
       el.setAttribute('aria-hidden', idx < visibleCount ? 'false' : 'true');
     });
     scene.classList.toggle('is-fully-shown', visibleCount >= totalSteps);
+    if (scene.classList.contains('center-visible')) centerVisibleSteps(scene);
+  }
+
+  function centerVisibleSteps(scene) {
+    const stack = scene.querySelector('.build-stack');
+    if (!stack) return;
+    const visible = stack.querySelectorAll('.step.is-shown');
+    if (!visible.length) {
+      stack.dataset.translateY = '0';
+      stack.style.transform = '';
+      return;
+    }
+    const sceneRect = scene.getBoundingClientRect();
+    const firstRect = visible[0].getBoundingClientRect();
+    const lastRect = visible[visible.length - 1].getBoundingClientRect();
+    const visibleMid = (firstRect.top + lastRect.bottom) / 2 - sceneRect.top;
+    const targetMid = sceneRect.height / 2;
+    const currentY = parseFloat(stack.dataset.translateY || '0');
+    const newY = currentY + targetMid - visibleMid;
+    stack.dataset.translateY = String(newY);
+    stack.style.transform = `translateY(${newY}px)`;
   }
 
   function isClickOnly(idx) { return CLICK_ONLY.has(idx); }
@@ -966,6 +1029,17 @@ __SCENES__
   window.addEventListener('resize', () => {
     track.style.transition = 'none';
     track.style.transform = `translate3d(0, ${-activeIdx * window.innerHeight}px, 0)`;
+    document.querySelectorAll('.scene--build.center-visible').forEach(scene => {
+      const stack = scene.querySelector('.build-stack');
+      if (!stack) return;
+      const prev = stack.style.transition;
+      stack.style.transition = 'none';
+      stack.dataset.translateY = '0';
+      stack.style.transform = '';
+      void stack.offsetHeight;
+      stack.style.transition = prev;
+      if (scene.querySelectorAll('.step.is-shown').length) centerVisibleSteps(scene);
+    });
     requestAnimationFrame(() => { track.style.transition = ''; });
   });
 
