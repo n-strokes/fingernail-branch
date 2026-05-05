@@ -41,7 +41,7 @@ CHAPTERS = {
 
 PREFACE_PARAGRAPHS = [
     'What follows is based on a real dialogue between a man and his clawed friend. It has been polished, and the claws were lightened.',
-    'We shall call the man n-strokes (pronounced "en hyphen strokes") and we shall call his friend Lightened Claws.',
+    'We shall call the man n-strokes (pronounced *en hyphen strokes*) and we shall call his friend Lightened Claws.',
 ]
 
 INTRO = {
@@ -351,7 +351,7 @@ def render_title(s):
     '''
 
 def render_preface(s):
-    paras_html = '\n'.join(f'<p>{escape(p)}</p>' for p in PREFACE_PARAGRAPHS)
+    paras_html = '\n'.join(f'<p>{render_inline(p)}</p>' for p in PREFACE_PARAGRAPHS)
     return f'''
       <div class="scene-inner preface-inner">
         <div class="preface-body">

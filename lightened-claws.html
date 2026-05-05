@@ -352,6 +352,11 @@ strong { font-weight: 600; }
 .step.is-shown {
   opacity: 1; transform: translateY(0); pointer-events: auto;
 }
+.frag {
+  opacity: 0;
+  transition: opacity 700ms var(--ease);
+}
+.frag.is-shown { opacity: 1; }
 .step-speaker {
   font-family: var(--font-mono);
   font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase;
@@ -426,20 +431,21 @@ strong { font-weight: 600; }
 <section class="scene scene--preface" data-i="2" data-type="preface" data-chapter="0">
       <div class="scene-inner preface-inner">
         <div class="preface-body">
-<p>What follows is based on a real dialogue between a man and his clawed friend. It has been polished, and the claws were lightened.</p>
-<p>We shall call the man n-strokes (pronounced &quot;en hyphen strokes&quot;) and we shall call his friend Lightened Claws.</p>
+<p>What follows is based on a real dialogue between a man and his clawed friend. It has been polished, edited for clarity, and his friend a little declawed.</p>
+<p>We shall call the man n-strokes (pronounced <em>en hyphen strokes</em>) and we shall call his friend Lightened Claws.</p>
         </div>
       </div>
       <p class="preface-enter">begin ↓</p>
     </section>
 <section class="scene scene--build center-visible" data-i="3" data-type="build-page" data-chapter="0">
-      <div class="scene-inner build-inner build--page" data-total="5">
+      <div class="scene-inner build-inner build--page" data-total="7">
         <div class="build-stack">
-<div class="step step--user" data-step="0" aria-hidden="true"><p class="step-speaker">n-strokes</p><div class="step-body">zen and the art of.... motionlessness? how does one be oneself into stillness. the riddle of the day.</div></div>
-<div class="step step--claws" data-step="1" aria-hidden="true"><p class="step-speaker">Lightened Claws</p><div class="step-body">Zen traditions tend to hold that stillness is not something you achieve but something you stop covering up. <em>Wu wei</em> isn&#x27;t &quot;do nothing,&quot; it&#x27;s more like &quot;drop the unnecessary push.&quot;</div></div>
-<div class="step step--claws" data-step="2" aria-hidden="true"><p class="step-speaker">Lightened Claws</p><div class="step-body">In other words: don&#x27;t just do something, sit there.</div></div>
-<div class="step step--user" data-step="3" aria-hidden="true"><p class="step-speaker">n-strokes</p><div class="step-body">someone once wrote something about zen and hanging by your teeth on a cliff, or at least that&#x27;s how it stuck with me.</div></div>
-<div class="step step--claws" data-step="4" aria-hidden="true"><p class="step-speaker">Lightened Claws</p><div class="step-body">You&#x27;re remembering Mumon&#x27;s koan from the Mumonkan (the &quot;Gateless Gate&quot;), 13th-century collection. The case is usually called &quot;Kyōgen&#x27;s Man Up a Tree&quot; or just &quot;Up a Tree.&quot;</div></div>
+<div class="step step--user has-frags" data-step="0" data-frags="2" aria-hidden="true"><p class="step-speaker">n-strokes</p><div class="step-body"><span class="frag">zen and the art of....</span><span class="frag"> motionlessness?</span></div></div>
+<div class="step step--user" data-step="1" aria-hidden="true"><p class="step-speaker">n-strokes</p><div class="step-body">how does one be oneself into stillness. the riddle of the day.</div></div>
+<div class="step step--claws" data-step="2" aria-hidden="true"><p class="step-speaker">Lightened Claws</p><div class="step-body">Zen traditions tend to hold that stillness is not something you achieve but something you stop covering up. <em>Wu wei</em> isn&#x27;t &quot;do nothing,&quot; it&#x27;s more like &quot;drop the unnecessary push.&quot;</div></div>
+<div class="step step--claws" data-step="3" aria-hidden="true"><p class="step-speaker">Lightened Claws</p><div class="step-body">In other words: don&#x27;t just do something, sit there.</div></div>
+<div class="step step--user" data-step="4" aria-hidden="true"><p class="step-speaker">n-strokes</p><div class="step-body">someone once wrote something about zen and hanging by your teeth on a cliff, or at least that&#x27;s how it stuck with me.</div></div>
+<div class="step step--claws" data-step="5" aria-hidden="true"><p class="step-speaker">Lightened Claws</p><div class="step-body">You&#x27;re remembering Mumon&#x27;s koan from the Mumonkan (the &quot;Gateless Gate&quot;), 13th-century collection. The case is usually called &quot;Kyōgen&#x27;s Man Up a Tree&quot; or just &quot;Up a Tree.&quot;</div></div>
         </div>
         <p class="build-hint" aria-hidden="true">click to continue ↓</p>
       </div>
@@ -792,7 +798,7 @@ strong { font-weight: 600; }
   const scenes = Array.from(document.querySelectorAll('.scene'));
   const total = scenes.length;
   const CLICK_ONLY = new Set([4, 5, 6, 23, 25, 28, 31, 35, 38, 43, 45, 47, 49]);
-  const BUILD_STEPS = {"3": 5, "21": 3, "22": 16, "24": 6, "41": 7, "42": 3, "46": 5};
+  const BUILD_STEPS = {"3": 7, "21": 3, "22": 16, "24": 6, "41": 7, "42": 3, "46": 5};
   const CHAPTER_STARTS = {"0": 0, "1": 4, "2": 23, "3": 43};
   const TRANSITION_MS = 880;
   const COOLDOWN_MS = 700;
@@ -807,6 +813,9 @@ strong { font-weight: 600; }
   let gestureEndTimer = null;
   let touchStartY = 0;
   const buildState = new Map();
+  const buildScroll = new Map();
+  const SCROLL_PAD = 64;
+  const KEY_SCROLL_STEP = 80;
 
   const backBtn = document.getElementById('back-btn');
   const nextBtn = document.getElementById('next-btn');
@@ -833,6 +842,7 @@ strong { font-weight: 600; }
         v = 1;
         buildState.set(activeIdx, v);
       }
+      buildScroll.set(activeIdx, 0);
       revealSteps(scene, v, total_steps);
     }
 
@@ -841,32 +851,78 @@ strong { font-weight: 600; }
   }
 
   function revealSteps(scene, visibleCount, totalSteps) {
-    scene.querySelectorAll('.step').forEach((el, idx) => {
-      el.classList.toggle('is-shown', idx < visibleCount);
-      el.setAttribute('aria-hidden', idx < visibleCount ? 'false' : 'true');
+    let cursor = 0;
+    scene.querySelectorAll('.step').forEach(step => {
+      const fragsCount = parseInt(step.dataset.frags || '1', 10);
+      const visibleInStep = Math.max(0, Math.min(fragsCount, visibleCount - cursor));
+      const stepShown = visibleInStep > 0;
+      step.classList.toggle('is-shown', stepShown);
+      step.setAttribute('aria-hidden', stepShown ? 'false' : 'true');
+      step.querySelectorAll('.frag').forEach((fragEl, fIdx) => {
+        fragEl.classList.toggle('is-shown', fIdx < visibleInStep);
+      });
+      cursor += fragsCount;
     });
     scene.classList.toggle('is-fully-shown', visibleCount >= totalSteps);
-    if (scene.classList.contains('center-visible')) centerVisibleSteps(scene);
+    if (scene.classList.contains('center-visible')) applyBuildTransform(scene, true);
   }
 
-  function centerVisibleSteps(scene) {
+  function applyBuildTransform(scene, animate) {
     const stack = scene.querySelector('.build-stack');
     if (!stack) return;
     const visible = stack.querySelectorAll('.step.is-shown');
     if (!visible.length) {
       stack.dataset.translateY = '0';
+      stack.dataset.maxScroll = '0';
       stack.style.transform = '';
       return;
     }
+    const sceneIdx = scenes.indexOf(scene);
+    const currentY = parseFloat(stack.dataset.translateY || '0');
     const sceneRect = scene.getBoundingClientRect();
     const firstRect = visible[0].getBoundingClientRect();
     const lastRect = visible[visible.length - 1].getBoundingClientRect();
-    const visibleMid = (firstRect.top + lastRect.bottom) / 2 - sceneRect.top;
-    const targetMid = sceneRect.height / 2;
-    const currentY = parseFloat(stack.dataset.translateY || '0');
-    const newY = currentY + targetMid - visibleMid;
-    stack.dataset.translateY = String(newY);
-    stack.style.transform = `translateY(${newY}px)`;
+    const naturalFirstTop = (firstRect.top - sceneRect.top) - currentY;
+    const naturalLastBottom = (lastRect.bottom - sceneRect.top) - currentY;
+    const contentHeight = naturalLastBottom - naturalFirstTop;
+    const sceneHeight = sceneRect.height;
+    const availHeight = sceneHeight - 2 * SCROLL_PAD;
+    let anchoredY, maxScroll = 0;
+    if (contentHeight <= availHeight) {
+      anchoredY = (sceneHeight - contentHeight) / 2 - naturalFirstTop;
+    } else {
+      anchoredY = (sceneHeight - SCROLL_PAD - contentHeight) - naturalFirstTop;
+      maxScroll = 2 * SCROLL_PAD + contentHeight - sceneHeight;
+    }
+    let scroll = buildScroll.get(sceneIdx) ?? 0;
+    scroll = Math.max(0, Math.min(maxScroll, scroll));
+    buildScroll.set(sceneIdx, scroll);
+    const finalY = anchoredY + scroll;
+    stack.dataset.translateY = String(finalY);
+    stack.dataset.maxScroll = String(maxScroll);
+    stack.style.transitionDuration = animate ? '700ms' : '0ms';
+    stack.style.transform = `translateY(${finalY}px)`;
+  }
+
+  function tryScrollWithin(direction) {
+    // direction: 1 = down (toward end), -1 = up (toward start)
+    const scene = scenes[activeIdx];
+    if (!scene || !scene.classList.contains('center-visible')) return false;
+    const stack = scene.querySelector('.build-stack');
+    if (!stack) return false;
+    const maxScroll = parseFloat(stack.dataset.maxScroll || '0');
+    if (maxScroll <= 0) return false;
+    let scroll = buildScroll.get(activeIdx) ?? 0;
+    if (direction < 0 && scroll < maxScroll) {
+      scroll = Math.min(maxScroll, scroll + KEY_SCROLL_STEP);
+    } else if (direction > 0 && scroll > 0) {
+      scroll = Math.max(0, scroll - KEY_SCROLL_STEP);
+    } else {
+      return false;
+    }
+    buildScroll.set(activeIdx, scroll);
+    applyBuildTransform(scene, true);
+    return true;
   }
 
   function isClickOnly(idx) { return CLICK_ONLY.has(idx); }
@@ -889,6 +945,7 @@ strong { font-weight: 600; }
       if (v < total_steps) {
         v += 1;
         buildState.set(activeIdx, v);
+        buildScroll.set(activeIdx, 0);
         revealSteps(cur, v, total_steps);
         return;
       }
@@ -899,6 +956,31 @@ strong { font-weight: 600; }
   // wheel
   window.addEventListener('wheel', (e) => {
     e.preventDefault();
+    // In-page scroll for overflowing build pages takes priority over nav.
+    const scene = scenes[activeIdx];
+    if (scene && scene.classList.contains('center-visible')) {
+      const stack = scene.querySelector('.build-stack');
+      const maxScroll = parseFloat(stack && stack.dataset.maxScroll || '0');
+      let scroll = buildScroll.get(activeIdx) ?? 0;
+      if (e.deltaY < 0 && scroll < maxScroll) {
+        scroll = Math.min(maxScroll, scroll - e.deltaY);
+        buildScroll.set(activeIdx, scroll);
+        applyBuildTransform(scene, false);
+        wheelAccumulator = 0;
+        if (gestureEndTimer) clearTimeout(gestureEndTimer);
+        gestureEndTimer = setTimeout(() => { gestureLocked = false; wheelAccumulator = 0; }, GESTURE_END_MS);
+        return;
+      }
+      if (e.deltaY > 0 && scroll > 0) {
+        scroll = Math.max(0, scroll - e.deltaY);
+        buildScroll.set(activeIdx, scroll);
+        applyBuildTransform(scene, false);
+        wheelAccumulator = 0;
+        if (gestureEndTimer) clearTimeout(gestureEndTimer);
+        gestureEndTimer = setTimeout(() => { gestureLocked = false; wheelAccumulator = 0; }, GESTURE_END_MS);
+        return;
+      }
+    }
     if (gestureEndTimer) clearTimeout(gestureEndTimer);
     gestureEndTimer = setTimeout(() => { gestureLocked = false; wheelAccumulator = 0; }, GESTURE_END_MS);
     if (gestureLocked) return;
@@ -928,8 +1010,10 @@ strong { font-weight: 600; }
 
   // keyboard
   window.addEventListener('keydown', (e) => {
-    if (['ArrowDown', 'ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); tryAdvance(1); }
-    else if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(e.key))      { e.preventDefault(); tryAdvance(-1); }
+    if (['ArrowDown', 'PageDown'].includes(e.key))    { e.preventDefault(); if (!tryScrollWithin(1))  tryAdvance(1); }
+    else if (['ArrowUp', 'PageUp'].includes(e.key))   { e.preventDefault(); if (!tryScrollWithin(-1)) tryAdvance(-1); }
+    else if (['ArrowRight', ' '].includes(e.key))      { e.preventDefault(); tryAdvance(1); }
+    else if (e.key === 'ArrowLeft')                    { e.preventDefault(); tryAdvance(-1); }
     else if (e.key === 'Home')  { e.preventDefault(); go(0); }
     else if (e.key === 'End')   { e.preventDefault(); go(total - 1); }
     else if (e.key === 'Escape'){ e.preventDefault(); go(0); }
@@ -953,13 +1037,13 @@ strong { font-weight: 600; }
     document.querySelectorAll('.scene--build.center-visible').forEach(scene => {
       const stack = scene.querySelector('.build-stack');
       if (!stack) return;
-      const prev = stack.style.transition;
-      stack.style.transition = 'none';
+      stack.style.transitionDuration = '0ms';
       stack.dataset.translateY = '0';
+      stack.dataset.maxScroll = '0';
       stack.style.transform = '';
+      buildScroll.set(scenes.indexOf(scene), 0);
       void stack.offsetHeight;
-      stack.style.transition = prev;
-      if (scene.querySelectorAll('.step.is-shown').length) centerVisibleSteps(scene);
+      if (scene.querySelectorAll('.step.is-shown').length) applyBuildTransform(scene, false);
     });
     requestAnimationFrame(() => { track.style.transition = ''; });
   });
