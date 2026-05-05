@@ -856,7 +856,9 @@ strong { font-weight: 600; }
         v = 1;
         buildState.set(activeIdx, v);
       }
-      buildScroll.set(activeIdx, 0);
+      // Re-entering an already fully-revealed page: start scrolled to the top.
+      // First-time / partial: anchor at bottom so the next reveal appears in view.
+      buildScroll.set(activeIdx, v >= total_steps ? Number.MAX_SAFE_INTEGER : 0);
       revealSteps(scene, v, total_steps);
     }
 
