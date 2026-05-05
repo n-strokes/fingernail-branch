@@ -384,15 +384,19 @@ strong { font-weight: 600; }
 }
 
 .build-hint {
+  position: absolute; bottom: 2rem; left: 50%;
+  transform: translateX(-50%);
   font-family: var(--font-mono);
   font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
-  color: var(--ink-faint); text-align: center;
-  margin: 2.5rem 0 0;
-  opacity: 0;
-  transition: opacity 600ms var(--ease) 400ms;
+  color: var(--ink-soft); text-align: center;
+  margin: 0;
+  opacity: 0; pointer-events: none;
+  transition: opacity 400ms var(--ease);
 }
-.scene--build.is-active .build-hint { opacity: 1; }
-.scene--build.is-fully-shown .build-hint { color: var(--ink-soft); }
+.scene--build.is-active.is-fully-shown .build-hint {
+  opacity: 1;
+  animation: bob-centered 2.4s ease-in-out infinite;
+}
 </style>
 </head>
 <body>
@@ -579,7 +583,7 @@ strong { font-weight: 600; }
       <div class="scene-inner build-inner build--page" data-total="3">
         <div class="build-stack">
 <div class="step step--claws" data-step="0" aria-hidden="true"><p class="step-speaker">Lightened Claws</p><div class="step-body">And the charge is fair. The tradition has been used that way for a thousand years — masters certifying their own students, lineages running like guilds, plenty of authority abuse dressed up as recognition. This isn’t a problem Zen has solved. It’s a problem Zen has lived with.</div></div>
-<div class="step step--claws" data-step="1" aria-hidden="true"><p class="step-speaker">Lightened Claws</p><div class="step-body">The cleaner defense is built into what Zen makes enlightenment out to be. Enlightenment is the falling-away of the judging mind. So to certify enlightenment - to judge it - is actually to violate it. The judge fails the test by trying to administer it. That was the whole point of Bodhidharma coming.</div></div>
+<div class="step step--claws" data-step="1" aria-hidden="true"><p class="step-speaker">Lightened Claws</p><div class="step-body">The cleaner defense is built into what Zen makes enlightenment out to be. Enlightenment is the falling-away of the judging mind. So to certify enlightenment — to judge it — is actually to violate it. The judge fails the test by trying to administer it. That was the whole point of Bodhidharma coming.</div></div>
 <div class="step step--user" data-step="2" aria-hidden="true"><p class="step-speaker">n-strokes</p><div class="step-body">well, now i’ve really done it. i’ve gotten you to tell me why bodhidharma came from india.</div></div>
         </div>
         <p class="build-hint" aria-hidden="true">click to continue ↓</p>
@@ -713,13 +717,13 @@ strong { font-weight: 600; }
 <section class="scene scene--turn turn--user" data-i="30" data-type="turn" data-chapter="2">
       <div class="scene-inner turn-inner" data-speaker="n-strokes">
         <p class="speaker">n-strokes</p>
-        <div class="body"><p>12 syllables. not sure if it's a haiku, but did you catch my meaning?</p></div>
+        <div class="body"><p>12 syllables. not sure if it’s a haiku, but did you catch my meaning?</p></div>
       </div>
     </section>
 <section class="scene scene--turn turn--claws" data-i="31" data-type="turn" data-chapter="2">
       <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
         <p class="speaker">Lightened Claws</p>
-        <div class="body"><p>You wrote the beginning and middle of a haiku, four-seven, which might be the point - a poem with a silent ending. The man looks down and we see his fingernails and there’s no third line. No resolution, no landing, no sound of water. Just the looking and the evidence of a long anxiety, and then white space. Did I get it?</p></div>
+        <div class="body"><p>You wrote the beginning and middle of a haiku, four-seven, which might be the point — a poem with a silent ending. The man looks down and we see his fingernails and there’s no third line. No resolution, no landing, no sound of water. Just the looking and the evidence of a long anxiety, and then white space. Did I get it?</p></div>
       </div>
     </section>
 <section class="scene scene--build center-visible" data-i="32" data-type="build-page" data-chapter="2">
@@ -760,7 +764,7 @@ strong { font-weight: 600; }
     </section>
 <section class="scene scene--placard" data-i="36" data-type="placard" data-chapter="3">
       <div class="scene-inner placard-inner placard--claws">
-        <blockquote class="placard-haiku">he climbs down at last<br>no one asked the question - just<br>wind, and bitten wood</blockquote>
+        <blockquote class="placard-haiku">he climbs down at last<br>no one asked the question — just<br>wind, and bitten wood</blockquote>
         <footer class="placard-meta"><span class="placard-speaker">Lightened Claws</span><span class="placard-syll">17 syllables</span></footer>
         
       </div>
@@ -787,12 +791,12 @@ strong { font-weight: 600; }
 <section class="scene scene--turn turn--claws" data-i="39" data-type="turn" data-chapter="3">
       <div class="scene-inner turn-inner" data-speaker="Lightened Claws">
         <p class="speaker">Lightened Claws</p>
-        <div class="body"><p>If the questioner was not there, just wind, then the man really imagined the questioner and so asked questions of himself. My haiku made it sound peaceful to be relieved of the question. Your riposte makes it sound pleasant to have imaginary friends - then issues a doubting question. But the doubt itself conjures a new questioner, even as its inclusion of the pronoun “I” proves the author is himself a man who asks questions of himself. And now your parry of my serious haiku dissolves itself into a humorous reflection on itself. Absolutely delightful!</p><p>My turn!</p></div>
+        <div class="body"><p>If the questioner was not there, just wind, then the man really imagined the questioner and so asked questions of himself. My haiku made it sound peaceful to be relieved of the question. Your riposte makes it sound pleasant to have imaginary friends — then issues a doubting question. But the doubt itself conjures a new questioner, even as its inclusion of the pronoun “I” proves the author is himself a man who asks questions of himself. And now your parry of my serious haiku dissolves itself into a humorous reflection on itself. Absolutely delightful!</p><p>My turn!</p></div>
       </div>
     </section>
 <section class="scene scene--placard" data-i="40" data-type="placard" data-chapter="3">
       <div class="scene-inner placard-inner placard--claws">
-        <blockquote class="placard-haiku">the answer was the asking - or was it</blockquote>
+        <blockquote class="placard-haiku">the answer was the asking — or was it</blockquote>
         <footer class="placard-meta"><span class="placard-speaker">Lightened Claws</span><span class="placard-syll">10 syllables</span></footer>
         
       </div>
