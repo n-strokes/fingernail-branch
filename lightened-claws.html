@@ -811,21 +811,13 @@ strong { font-weight: 600; }
   const track = document.getElementById('track');
   const scenes = Array.from(document.querySelectorAll('.scene'));
   const total = scenes.length;
-  const CLICK_ONLY = new Set([4, 5, 6, 23, 25, 28, 31, 35, 38, 43, 45, 47, 49]);
   const BUILD_STEPS = {"3": 10, "7": 12, "9": 5, "11": 4, "12": 2, "13": 2, "14": 3, "15": 5, "16": 3, "17": 6, "18": 7, "20": 6, "33": 7, "34": 3, "38": 5};
   const CHAPTER_STARTS = {"0": 0, "1": 4, "2": 19, "3": 35};
   const TRANSITION_MS = 880;
   const COOLDOWN_MS = 700;
-  const WHEEL_THRESHOLD = 30;
-  const SWIPE_THRESHOLD = 40;
-  const GESTURE_END_MS = 150;
 
   let activeIdx = 0;
   let lastTransitionAt = 0;
-  let wheelAccumulator = 0;
-  let gestureLocked = false;
-  let gestureEndTimer = null;
-  let touchStartY = 0;
   const buildState = new Map();
   const buildScroll = new Map();
   const SCROLL_PAD = 64;
@@ -941,8 +933,6 @@ strong { font-weight: 600; }
     return true;
   }
 
-  function isClickOnly(idx) { return CLICK_ONLY.has(idx); }
-
   function go(targetIdx) {
     if (targetIdx < 0 || targetIdx >= total) return;
     if (targetIdx === activeIdx) return;
@@ -969,60 +959,56 @@ strong { font-weight: 600; }
     go(activeIdx + (direction > 0 ? 1 : -1));
   }
 
-  // wheel
+  // wheel — in-page scroll only; never advances pages.
   window.addEventListener('wheel', (e) => {
     e.preventDefault();
-    // In-page scroll for overflowing build pages takes priority over nav.
     const scene = scenes[activeIdx];
-    if (scene && scene.classList.contains('center-visible')) {
-      const stack = scene.querySelector('.build-stack');
-      const maxScroll = parseFloat(stack && stack.dataset.maxScroll || '0');
-      let scroll = buildScroll.get(activeIdx) ?? 0;
-      if (e.deltaY < 0 && scroll < maxScroll) {
-        scroll = Math.min(maxScroll, scroll - e.deltaY);
-        buildScroll.set(activeIdx, scroll);
-        applyBuildTransform(scene, false);
-        wheelAccumulator = 0;
-        if (gestureEndTimer) clearTimeout(gestureEndTimer);
-        gestureEndTimer = setTimeout(() => { gestureLocked = false; wheelAccumulator = 0; }, GESTURE_END_MS);
-        return;
-      }
-      if (e.deltaY > 0 && scroll > 0) {
-        scroll = Math.max(0, scroll - e.deltaY);
-        buildScroll.set(activeIdx, scroll);
-        applyBuildTransform(scene, false);
-        wheelAccumulator = 0;
-        if (gestureEndTimer) clearTimeout(gestureEndTimer);
-        gestureEndTimer = setTimeout(() => { gestureLocked = false; wheelAccumulator = 0; }, GESTURE_END_MS);
-        return;
-      }
-    }
-    if (gestureEndTimer) clearTimeout(gestureEndTimer);
-    gestureEndTimer = setTimeout(() => { gestureLocked = false; wheelAccumulator = 0; }, GESTURE_END_MS);
-    if (gestureLocked) return;
-    if (Date.now() - lastTransitionAt < COOLDOWN_MS) return;
-    if (isClickOnly(activeIdx) && e.deltaY > 0) { wheelAccumulator = 0; return; }
-    wheelAccumulator += e.deltaY;
-    if (Math.abs(wheelAccumulator) >= WHEEL_THRESHOLD) {
-      tryAdvance(wheelAccumulator > 0 ? 1 : -1);
-      wheelAccumulator = 0;
-      gestureLocked = true;
+    if (!scene || !scene.classList.contains('center-visible')) return;
+    const stack = scene.querySelector('.build-stack');
+    const maxScroll = parseFloat(stack && stack.dataset.maxScroll || '0');
+    if (maxScroll <= 0) return;
+    let scroll = buildScroll.get(activeIdx) ?? 0;
+    if (e.deltaY < 0 && scroll < maxScroll) {
+      scroll = Math.min(maxScroll, scroll - e.deltaY);
+      buildScroll.set(activeIdx, scroll);
+      applyBuildTransform(scene, false);
+    } else if (e.deltaY > 0 && scroll > 0) {
+      scroll = Math.max(0, scroll - e.deltaY);
+      buildScroll.set(activeIdx, scroll);
+      applyBuildTransform(scene, false);
     }
   }, { passive: false });
 
-  // click
+  // click — only nav input that advances pages
   document.addEventListener('click', (e) => {
     if (e.target.closest('.chrome, .chapter-nav')) return;
     tryAdvance(1);
   });
 
-  // touch
-  window.addEventListener('touchstart', (e) => { touchStartY = e.touches[0].clientY; }, { passive: true });
-  window.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
-  window.addEventListener('touchend', (e) => {
-    const dy = touchStartY - e.changedTouches[0].clientY;
-    if (Math.abs(dy) >= SWIPE_THRESHOLD) tryAdvance(dy > 0 ? 1 : -1);
-  });
+  // touch — in-page scroll only; never advances pages.
+  let lastTouchY = 0;
+  window.addEventListener('touchstart', (e) => { lastTouchY = e.touches[0].clientY; }, { passive: true });
+  window.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const scene = scenes[activeIdx];
+    if (!scene || !scene.classList.contains('center-visible')) return;
+    const stack = scene.querySelector('.build-stack');
+    const maxScroll = parseFloat(stack && stack.dataset.maxScroll || '0');
+    if (maxScroll <= 0) return;
+    const currentY = e.touches[0].clientY;
+    const dy = lastTouchY - currentY;
+    lastTouchY = currentY;
+    let scroll = buildScroll.get(activeIdx) ?? 0;
+    if (dy < 0 && scroll < maxScroll) {
+      scroll = Math.min(maxScroll, scroll - dy);
+      buildScroll.set(activeIdx, scroll);
+      applyBuildTransform(scene, false);
+    } else if (dy > 0 && scroll > 0) {
+      scroll = Math.max(0, scroll - dy);
+      buildScroll.set(activeIdx, scroll);
+      applyBuildTransform(scene, false);
+    }
+  }, { passive: false });
 
   // keyboard
   window.addEventListener('keydown', (e) => {
